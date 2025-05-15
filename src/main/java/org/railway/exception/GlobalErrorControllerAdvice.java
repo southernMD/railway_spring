@@ -1,5 +1,6 @@
 package org.railway.exception;
 
+import jakarta.security.auth.message.AuthException;
 import jakarta.validation.ConstraintViolationException;
 import org.railway.dto.response.BaseResponse;
 import org.railway.utils.TimerFormat;
@@ -12,7 +13,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.nio.file.AccessDeniedException;
+import org.springframework.security.access.AccessDeniedException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,12 +54,11 @@ public class GlobalErrorControllerAdvice {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
     //403
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<BaseResponse<Void>> handleAccessDeniedException(AccessDeniedException ex) {
+    @ExceptionHandler({AccessDeniedException.class, AuthException.class})
+    public ResponseEntity<BaseResponse<Void>> handleAccessDeniedAndAuthException(Exception ex) {
         BaseResponse<Void> response = BaseResponse.error(HttpStatus.FORBIDDEN.value(), ex.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
-
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<BaseResponse<Void>> handleOtherErrors(Exception ex) {

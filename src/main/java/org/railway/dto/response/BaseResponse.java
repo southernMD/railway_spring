@@ -14,6 +14,9 @@ public class BaseResponse<T> {
     private T data;
     private String timestamp;
 
+    public static <T> BaseResponse<T> success(T data,  String message) {
+        return new BaseResponse<>(200, message, data, TimerFormat.getNowTime());
+    }
     public static <T> BaseResponse<T> success(T data) {
         return new BaseResponse<>(200, "Success", data, TimerFormat.getNowTime());
     }

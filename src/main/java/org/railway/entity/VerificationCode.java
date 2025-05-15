@@ -18,14 +18,8 @@ public class VerificationCode extends Base{
     @Column(length = 100)
     private String email;
 
-    @Column(length = 20)
-    private String phone;
-
     @Column(nullable = false, length = 10)
     private String code;
-
-    @Column(nullable = false)
-    private Integer codeType;
 
     @Column(nullable = false)
     private LocalDateTime expireTime;

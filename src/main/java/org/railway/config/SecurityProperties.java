@@ -9,8 +9,7 @@ public class SecurityProperties {
 
     // 定义不需要 Token 的路径
     public static final List<String> PUBLIC_PATHS = List.of(
-            "/auth/login",
-            "/auth/refresh",
+            "/auth",
             "/test"
     );
 }
