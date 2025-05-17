@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "train_models")
@@ -22,33 +23,16 @@ public class TrainModel extends Base{
     private String modelCode;
 
     @Column(nullable = false)
-    private Integer status = 1;
+    private Integer status;
 
     @Column(nullable = false)
     private Integer maxCapacity;
 
-    @Column(nullable = false)
-    private Integer totalCarriages;
-
-    @Column(nullable = false)
-    private Integer businessCarriages = 0;
-
-    @Column(nullable = false)
-    private Integer firstClassCarriages = 0;
-
-    @Column(nullable = false)
-    private Integer secondClassCarriages = 0;
-
-    @Column(nullable = false)
-    private Integer businessSeatsPerCarriage = 0;
-
-    @Column(nullable = false)
-    private Integer firstClassSeatsPerCarriage = 0;
-
-    @Column(nullable = false)
-    private Integer secondClassSeatsPerCarriage = 0;
-
     @Column(columnDefinition = "TEXT")
     private String description;
+
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
+    @JoinColumn(name = "model_id") // 指定外键字段名
+    private List<TrainCarriage> carriages;
 
 }

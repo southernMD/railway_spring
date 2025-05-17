@@ -57,15 +57,9 @@ public class Ticket extends Base{
     @JoinColumn(name = "carriage_id")
     private TrainCarriage carriage;
 
-    @Column(length = 10)
-    private String carriageNumber;
-
     @ManyToOne
     @JoinColumn(name = "seat_id")
     private Seat seat;
-
-    @Column(length = 10)
-    private String seatNumber;
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
