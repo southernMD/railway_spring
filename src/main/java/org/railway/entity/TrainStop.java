@@ -18,9 +18,8 @@ public class TrainStop extends Base {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "train_id", nullable = false)
-    private Train train;
+    @Column(name = "train_id", nullable = false)
+    private Long trainId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "station_id", nullable = false)
@@ -31,9 +30,6 @@ public class TrainStop extends Base {
 
     @Column
     private LocalTime arrivalTime;
-
-    @Column
-    private LocalTime departureTime;
 
     @Column(columnDefinition = "int default 0")
     private Integer stopDuration = 0;

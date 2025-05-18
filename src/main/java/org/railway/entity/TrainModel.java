@@ -1,8 +1,10 @@
 package org.railway.entity;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.railway.dto.Views;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,12 +25,14 @@ public class TrainModel extends Base{
     private String modelCode;
 
     @Column(nullable = false)
+    @JsonView(Views.Detailed.class)
     private Integer status;
 
     @Column(nullable = false)
     private Integer maxCapacity;
 
     @Column(columnDefinition = "TEXT")
+    @JsonView(Views.Detailed.class)
     private String description;
 
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)

@@ -1,8 +1,10 @@
 package org.railway.entity;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.railway.dto.Views;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,5 +33,6 @@ public class TrainCarriage extends Base{
     // 车厢与座位是一对多关系
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "carriage_id") // 指定外键字段名
+    @JsonView(Views.Detailed.class)
     private List<Seat> seats;
 }

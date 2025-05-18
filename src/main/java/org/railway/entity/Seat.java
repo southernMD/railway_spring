@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "seats")
 @Data
@@ -22,7 +25,7 @@ public class Seat extends Base{
     @Column(nullable = false)
     private Integer status = 1;
 
-    @OneToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "id", referencedColumnName = "seat_id", insertable = false, updatable = false)
-    private SeatLock lockInfo;
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinColumn(name = "seat_id")
+    private List<SeatLock> lockInfo = new ArrayList<>();
 }
