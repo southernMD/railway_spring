@@ -1,5 +1,6 @@
 package org.railway.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -25,15 +26,16 @@ public class Train extends Base{
 
     @OneToOne
     @JoinColumn(name = "model_id", nullable = false)
+    @JsonView(Views.Other.class)
     private TrainModel model;
 
     @OneToOne
     @JoinColumn(name = "start_station_id", nullable = false)
-    private Station startStation;
+    private StationView startStation;
 
     @OneToOne
     @JoinColumn(name = "end_station_id", nullable = false)
-    private Station endStation;
+    private StationView endStation;
 
     @Column(nullable =  false)
     private LocalDate date;
@@ -44,11 +46,11 @@ public class Train extends Base{
     @Column(nullable = false)
     private LocalTime arrivalTime;
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "id", referencedColumnName = "train_id")
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "train_seats_id", referencedColumnName = "id")
     private TrainSeat trainSeatInfo;
 
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "train_id") // 使用 @JoinColumn 维护关系
     @OrderBy("sequence ASC")
     private List<TrainStop> trainStops;

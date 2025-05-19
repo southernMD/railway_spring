@@ -6,10 +6,10 @@ import lombok.RequiredArgsConstructor;
 import org.railway.dto.request.TrainStopBatchUpdateRequest;
 import org.railway.dto.request.TrainStopRequest;
 import org.railway.dto.response.TrainStopResponse;
-import org.railway.entity.Station;
+import org.railway.entity.StationView;
 import org.railway.entity.Train;
 import org.railway.entity.TrainStop;
-import org.railway.service.impl.StationRepository;
+import org.railway.service.impl.StationViewRepository;
 import org.railway.service.impl.TrainRepository;
 import org.railway.service.impl.TrainStopRepository;
 import org.springframework.beans.BeanUtils;
@@ -28,7 +28,7 @@ public class TrainStopService {
 
     private final TrainStopRepository trainStopRepository;
     private final TrainRepository trainRepository;
-    private final StationRepository stationRepository;
+    private final StationViewRepository stationViewRepository;
 
     /**
      * 创建 TrainStop
@@ -44,8 +44,8 @@ public class TrainStopService {
 
         validateTrainStop(trainStop, train);
 
-        Station station = stationRepository.findById(Math.toIntExact(dto.getStationId()))
-                .orElseThrow(() -> new EntityNotFoundException("站点未找到"));
+        StationView station = stationViewRepository.findById(Math.toIntExact(dto.getStationId()))
+                .orElseThrow(() -> new EntityNotFoundException("站点未找到或不可用"));
 
         trainStop.setStation(station);
         // 校验 TrainStop
@@ -88,7 +88,7 @@ public class TrainStopService {
         // 校验 TrainStop
         validateTrainStop(trainStop, train);
 
-        Station station = stationRepository.findById(Math.toIntExact(dto.getStationId()))
+        StationView station = stationViewRepository.findById(Math.toIntExact(dto.getStationId()))
                 .orElseThrow(() -> new EntityNotFoundException("站点未找到"));
         trainStop.setStation(station);
 
@@ -126,8 +126,8 @@ public class TrainStopService {
                     if (requestMap.containsKey(trainStop.getId())) {
                         TrainStopRequest request = requestMap.get(trainStop.getId());
                         BeanUtils.copyProperties(request, trainStop);
-                        Station station = stationRepository.findById(Math.toIntExact(request.getStationId()))
-                                .orElseThrow(() -> new EntityNotFoundException("站点未找到"));
+                        StationView station = stationViewRepository.findById(Math.toIntExact(request.getStationId()))
+                                .orElseThrow(() -> new EntityNotFoundException("站点未找到或不可用"));
                         trainStop.setStation(station);
                     }
                 })
@@ -156,7 +156,6 @@ public class TrainStopService {
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
-
 
     /**
      * 将 TrainStop 实体转换为 TrainStopResponse

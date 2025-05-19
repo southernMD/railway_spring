@@ -4,16 +4,19 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.time.LocalDateTime;
+import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.View;
 
 @Entity
-@Table(name = "stations")
-@Data
 @EqualsAndHashCode(callSuper = true)
-public class Station extends Base{
+@Table(name = "stations_view")
+@Immutable
+@Data
+@View(
+    query = "SELECT * FROM stations s WHERE s.status = 1"
+)
+public class StationView extends Base{
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @Column(nullable = false, length = 50)
@@ -30,5 +33,4 @@ public class Station extends Base{
 
     @Column(nullable = false)
     private Integer status;
-
 }

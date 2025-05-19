@@ -21,9 +21,8 @@ public class Ticket extends Base{
     @Column(nullable = false, length = 32, unique = true)
     private String ticketNo;
 
-    @ManyToOne
-    @JoinColumn(name = "order_id", nullable = false)
-    private Order order;
+    @Column(name = "order_id", nullable = false)
+    private Long order_id;
 
     @ManyToOne
     @JoinColumn(name = "passenger_id", nullable = false)
@@ -38,11 +37,11 @@ public class Ticket extends Base{
 
     @ManyToOne
     @JoinColumn(name = "departure_station_id", nullable = false)
-    private Station departureStation;
+    private StationView departureStation;
 
     @ManyToOne
     @JoinColumn(name = "arrival_station_id", nullable = false)
-    private Station arrivalStation;
+    private StationView arrivalStation;
 
     @Column(nullable = false)
     private LocalTime departureTime;
@@ -65,7 +64,7 @@ public class Ticket extends Base{
     private BigDecimal price;
 
     @Column(nullable = false)
-    private Integer status = 0;
+    private Integer status;
 
     @Column(precision = 10, scale = 2)
     private BigDecimal refundAmount;

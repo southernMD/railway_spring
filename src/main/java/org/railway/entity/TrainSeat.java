@@ -17,9 +17,6 @@ public class TrainSeat extends Base{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "train_id", nullable = false)
-    private Long trainId;
-
     @Column(nullable = false)
     private Integer noSeatTickets = 0;
 

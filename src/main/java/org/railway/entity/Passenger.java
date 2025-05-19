@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "passengers")
@@ -33,8 +34,5 @@ public class Passenger extends Base{
 
     @Column(nullable = false)
     private Integer isDefault = 0;
-
-    @Column(nullable = false)
-    private Integer status = 1;
 
 }

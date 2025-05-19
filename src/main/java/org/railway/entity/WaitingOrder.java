@@ -29,11 +29,11 @@ public class WaitingOrder extends Base{
 
     @ManyToOne
     @JoinColumn(name = "departure_station_id", nullable = false)
-    private Station departureStation;
+    private StationView departureStation;
 
     @ManyToOne
     @JoinColumn(name = "arrival_station_id", nullable = false)
-    private Station arrivalStation;
+    private StationView arrivalStation;
 
     @Column(nullable = false)
     private Integer seatType;

@@ -6,11 +6,11 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.railway.dto.request.TrainRequest;
 import org.railway.dto.response.TrainResponse;
-import org.railway.entity.Station;
+import org.railway.entity.StationView;
 import org.railway.entity.Train;
 import org.railway.entity.TrainModel;
 import org.railway.entity.TrainSeat;
-import org.railway.service.impl.StationRepository;
+import org.railway.service.impl.StationViewRepository;
 import org.railway.service.impl.TrainModelRepository;
 import org.railway.service.impl.TrainRepository;
 import org.railway.service.impl.TrainSeatRepository;
@@ -34,7 +34,7 @@ public class TrainService {
     private final TrainRepository repository;
     private final TrainSeatRepository trainSeatRepository;
     private final TrainModelRepository trainModelRepository; // 新增
-    private final StationRepository stationRepository; // 新增
+    private final StationViewRepository stationViewRepository; // 新增
 
     /**
      * 查询所有列车信息
@@ -84,25 +84,24 @@ public class TrainService {
         Train train = new Train();
         BeanUtils.copyProperties(dto, train);
         // 根据 ID 查询并设置关联实体
-        TrainModel model = trainModelRepository.findById(Math.toIntExact(dto.getModelId()))
-                .orElseThrow(() -> new EntityNotFoundException("车型未找到"));
+//        TrainModel model = trainModelRepository.findById(Math.toIntExact(dto.getModelId()))
+//                .orElseThrow(() -> new EntityNotFoundException("车型未找到"));
         train.setModel(model);
 
-        Station startStation = stationRepository.findById(Math.toIntExact(dto.getStartStationId()))
-                .orElseThrow(() -> new EntityNotFoundException("起始站未找到"));
+        StationView startStation = stationViewRepository.findById(Math.toIntExact(dto.getStartStationId()))
+                .orElseThrow(() -> new EntityNotFoundException("起始站未找到或不可用"));
         train.setStartStation(startStation);
 
-        Station endStation = stationRepository.findById(Math.toIntExact(dto.getEndStationId()))
-                .orElseThrow(() -> new EntityNotFoundException("终点站未找到"));
+        StationView endStation = stationViewRepository.findById(Math.toIntExact(dto.getEndStationId()))
+                .orElseThrow(() -> new EntityNotFoundException("终点站未找到或不可用"));
         train.setEndStation(endStation);
         Train savedTrain = repository.save(train);
 
-        TrainSeat trainSeat = new TrainSeat();
-        BeanUtils.copyProperties(dto.getTrainSeatInfo(), trainSeat);
-        trainSeat.setTrainId(savedTrain.getId()); // 设置外键 trainId
-        trainSeatRepository.save(trainSeat);
-
-        savedTrain.setTrainSeatInfo(trainSeat);
+//        TrainSeat trainSeat = new TrainSeat();
+//        BeanUtils.copyProperties(dto.getTrainSeatInfo(), trainSeat);
+//        trainSeatRepository.save(trainSeat);
+//
+//        savedTrain.setTrainSeatInfo(trainSeat);
 
         return convertToResponse(savedTrain);
     }
@@ -149,28 +148,20 @@ public class TrainService {
 
         // 更新关联的起始站
         if (entity.getStartStation().getId().longValue() != dto.getStartStationId()) {
-            Station startStation = stationRepository.findById(Math.toIntExact(dto.getStartStationId()))
-                    .orElseThrow(() -> new EntityNotFoundException("起始站未找到"));
+            StationView startStation = stationViewRepository.findById(Math.toIntExact(dto.getStartStationId()))
+                    .orElseThrow(() -> new EntityNotFoundException("起始站未找到或不可用"));
             entity.setStartStation(startStation);
         }
 
         // 更新关联的终点站
         if (entity.getEndStation().getId().longValue() != dto.getEndStationId()) {
-            Station endStation = stationRepository.findById(Math.toIntExact(dto.getEndStationId()))
-                    .orElseThrow(() -> new EntityNotFoundException("终点站未找到"));
+            StationView endStation = stationViewRepository.findById(Math.toIntExact(dto.getEndStationId()))
+                    .orElseThrow(() -> new EntityNotFoundException("终点站未找到或不可用"));
             entity.setEndStation(endStation);
         }
 
         // 保存更新后的 Train 实体
         Train savedTrain = repository.save(entity);
-
-        // 更新关联的 TrainSeat
-        TrainSeat trainSeat = trainSeatRepository.findByTrainId(savedTrain.getId())
-                .orElseThrow(() -> new EntityNotFoundException("座位信息未找到"));
-        BeanUtils.copyProperties(dto.getTrainSeatInfo(), trainSeat);
-        trainSeatRepository.save(trainSeat);
-
-        savedTrain.setTrainSeatInfo(trainSeat);
 
         // 返回更新后的响应
         return convertToResponse(savedTrain);

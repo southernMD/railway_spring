@@ -1,9 +1,10 @@
 package org.railway.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.railway.entity.Station;
+import org.railway.entity.StationView;
 import org.railway.entity.Train;
 
 import java.time.LocalTime;
@@ -21,9 +22,9 @@ public class TrainStop extends Base {
     @Column(name = "train_id", nullable = false)
     private Long trainId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "station_id", nullable = false)
-    private Station station;
+    private StationView station;
 
     @Column(nullable = false)
     private Integer sequence;
@@ -32,5 +33,5 @@ public class TrainStop extends Base {
     private LocalTime arrivalTime;
 
     @Column(columnDefinition = "int default 0")
-    private Integer stopDuration = 0;
+    private Integer stopDuration;
 }

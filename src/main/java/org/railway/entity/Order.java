@@ -24,26 +24,14 @@ public class Order extends Base{
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false, length = 50)
-    private String contactName;
-
-    @Column(nullable = false, length = 20)
-    private String contactPhone;
-
-    @Column(nullable = false)
-    private Integer passengerCount = 1;
-
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount;
 
     @Column(nullable = false)
-    private Integer status = 0;
-
-    @Column(length = 20)
-    private String paymentMethod;
+    private Integer status;
 
     private LocalDateTime paymentTime;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "order_id", cascade = CascadeType.ALL)
     private List<Ticket> tickets;
 }

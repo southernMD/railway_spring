@@ -9,5 +9,4 @@ import java.util.Optional;
 
 @Repository
 public interface TrainSeatRepository extends JpaRepository<TrainSeat, Long> {
-    Optional<TrainSeat> findByTrainId(Long trainId);
 }
