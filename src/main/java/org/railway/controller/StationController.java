@@ -1,6 +1,7 @@
 package org.railway.controller;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.railway.dto.response.BaseResponse;
 import org.railway.entity.Station;
@@ -21,7 +22,7 @@ public class StationController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
-    public BaseResponse<Station> createStation(@RequestBody Station station) {
+    public BaseResponse<Station> createStation(@Valid @RequestBody Station station) {
         return BaseResponse.success(stationService.createStation(station));
     }
 
@@ -43,7 +44,7 @@ public class StationController {
     @PutMapping
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
-    public BaseResponse<Station> updateStation(@RequestBody Station station) {
+    public BaseResponse<Station> updateStation(@Valid @RequestBody Station station) {
         return BaseResponse.success(stationService.updateStation(station));
     }
 

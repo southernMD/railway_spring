@@ -1,6 +1,6 @@
 package org.railway.controller;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.railway.dto.request.TrainModelRequest;
@@ -39,7 +39,7 @@ public class TrainModelController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
-    public BaseResponse<TrainModelResponse> create(@RequestBody @Valid TrainModelRequest trainModel) throws SQLException {
+    public BaseResponse<TrainModelResponse> create(@Valid @RequestBody TrainModelRequest trainModel) throws SQLException {
         return BaseResponse.success(service.create(trainModel));
     }
 
@@ -108,7 +108,7 @@ public class TrainModelController {
      * @return 返回 查询结果
      */
     @PostMapping("/search")
-    public BaseResponse<List<TrainModelResponse>> search(@RequestBody TrainModel criteria) {
+    public BaseResponse<List<TrainModelResponse>> search(@Valid @RequestBody TrainModel criteria) {
         return BaseResponse.success(service.searchByCriteria(criteria));
     }
 }

@@ -1,6 +1,7 @@
 package org.railway.controller;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
+import jakarta.validation.Valid;
 import org.railway.dto.request.SeatRequest;
 import org.railway.dto.response.BaseResponse;
 import org.railway.dto.response.SeatResponse;
@@ -30,7 +31,7 @@ public class SeatController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
-    public BaseResponse<SeatResponse> create(@RequestBody SeatRequest dto) {
+    public BaseResponse<SeatResponse> create(@Valid @RequestBody SeatRequest dto) {
         return BaseResponse.success(service.create(dto));
     }
 
@@ -40,7 +41,7 @@ public class SeatController {
     @PostMapping("/batch")
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
-    public BaseResponse<List<SeatResponse>> createBatch(@RequestBody List<SeatRequest> dtos) {
+    public BaseResponse<List<SeatResponse>> createBatch(@Valid @RequestBody List<SeatRequest> dtos) {
         return BaseResponse.success(dtos.stream()
                 .map(service::create)
                 .collect(Collectors.toList()));
@@ -52,7 +53,7 @@ public class SeatController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
-    public BaseResponse<SeatResponse> update(@PathVariable Long id, @RequestBody SeatRequest dto) {
+    public BaseResponse<SeatResponse> update(@PathVariable Long id, @Valid @RequestBody SeatRequest dto) {
         return BaseResponse.success(service.update(id, dto));
     }
 

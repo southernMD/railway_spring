@@ -1,5 +1,6 @@
 package org.railway.controller;
 
+import jakarta.validation.Valid;
 import org.railway.dto.request.SeatLockRequest;
 import org.railway.dto.response.BaseResponse;
 import org.railway.dto.response.SeatLockResponse;
@@ -22,7 +23,7 @@ public class SeatLockController {
      * 创建新的座位锁定记录
      */
     @PostMapping
-    public BaseResponse<SeatLockResponse> create(@RequestBody SeatLockRequest dto) throws SQLException {
+    public BaseResponse<SeatLockResponse> create(@Valid @RequestBody SeatLockRequest dto) throws SQLException {
         return BaseResponse.success(service.create(dto));
     }
 

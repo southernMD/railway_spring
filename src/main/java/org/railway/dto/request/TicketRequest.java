@@ -54,10 +54,10 @@ public class TicketRequest {
 
     @NotNull(message = "状态不能为空")
     @Min(value = 0, message = "状态值必须大于等于0")
-    @Max(value = 3, message = "状态值必须小于等于2")
+    @Max(value = 3, message = "状态值必须小于等于3")
     private Integer status;
-
-    private BigDecimal refundAmount;
-
-    private LocalDateTime refundTime;
+//
+//    private BigDecimal refundAmount;
+//
+//    private LocalDateTime refundTime;
 }

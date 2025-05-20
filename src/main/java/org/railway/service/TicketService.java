@@ -146,7 +146,6 @@ public class TicketService {
                     .orElseThrow(() -> new EntityNotFoundException("座位未找到"));
             existingTicket.setSeat(seat);
         }
-
         Ticket updatedTicket = ticketRepository.save(existingTicket);
         return convertToResponse(updatedTicket);
     }

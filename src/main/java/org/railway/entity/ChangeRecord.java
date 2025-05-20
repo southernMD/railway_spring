@@ -34,7 +34,7 @@ public class ChangeRecord extends Base{
     private BigDecimal priceDifference = BigDecimal.ZERO;
 
     @Column(nullable = false)
-    private Integer status = 0;
+    private Integer status;
 
     @Column(length = 200)
     private String reason;

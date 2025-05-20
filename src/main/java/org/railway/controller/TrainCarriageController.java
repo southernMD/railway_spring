@@ -1,6 +1,7 @@
 package org.railway.controller;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
+import jakarta.validation.Valid;
 import org.railway.dto.request.TrainCarriageRequest;
 import org.railway.dto.response.BaseResponse;
 import org.railway.dto.response.TrainCarriageResponse;
@@ -31,7 +32,7 @@ public class TrainCarriageController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
-    public BaseResponse<TrainCarriageResponse> create(@RequestBody TrainCarriageRequest dto) {
+    public BaseResponse<TrainCarriageResponse> create(@Valid @RequestBody TrainCarriageRequest dto) {
         return BaseResponse.success(service.create(dto));
     }
 
@@ -44,7 +45,7 @@ public class TrainCarriageController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
-    public BaseResponse<TrainCarriageResponse> update(@PathVariable Long id, @RequestBody TrainCarriageRequest dto) {
+    public BaseResponse<TrainCarriageResponse> update(@PathVariable Long id, @Valid @RequestBody TrainCarriageRequest dto) {
         return BaseResponse.success(service.update(id, dto));
     }
 
