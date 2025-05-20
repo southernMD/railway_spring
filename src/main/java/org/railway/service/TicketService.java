@@ -7,11 +7,18 @@ import org.railway.dto.request.TicketRequest;
 import org.railway.dto.response.TicketResponse;
 import org.railway.entity.*;
 import org.railway.service.impl.*;
+import org.railway.utils.IntervalOverlapChecker;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -30,7 +37,9 @@ public class TicketService {
     private final StationViewRepository stationViewRepository;
     private final TrainCarriageRepository trainCarriageRepository;
     private final SeatRepository seatRepository;
-
+    private final TrainStopRepository trainStopRepository;
+    private final SeatLockRepository seatLockRepository;
+    private final SeatLockService seatLockService;
     /**
      * 查询所有车票信息
      *
@@ -61,13 +70,13 @@ public class TicketService {
      * @param ticketRequest 包含车票信息的请求数据
      * @return 创建后的响应数据
      */
-    public TicketResponse createTicket(@Valid TicketRequest ticketRequest) {
+    public TicketResponse createTicket(@Valid TicketRequest ticketRequest) throws SQLException {
         Ticket ticket = new Ticket();
         BeanUtils.copyProperties(ticketRequest, ticket);
 
         Order order = orderRepository.findById(ticketRequest.getOrderId())
                 .orElseThrow(() -> new EntityNotFoundException("订单未找到"));
-        ticket.setOrder_id(order.getId());
+        ticket.setOrderId(order.getId());
 
         Passenger passenger = passengerRepository.findById(ticketRequest.getPassengerId())
                 .orElseThrow(() -> new EntityNotFoundException("乘客未找到"));
@@ -77,15 +86,7 @@ public class TicketService {
                 .orElseThrow(() -> new EntityNotFoundException("列车未找到"));
         ticket.setTrain(train);
 
-        StationView departureStation = stationViewRepository.findById(Math.toIntExact(ticketRequest.getDepartureStationId()))
-                .orElseThrow(() -> new EntityNotFoundException("出发站未找到"));
-        ticket.setDepartureStation(departureStation);
-
-        StationView arrivalStation = stationViewRepository.findById(Math.toIntExact(ticketRequest.getArrivalStationId()))
-                .orElseThrow(() -> new EntityNotFoundException("到达站未找到"));
-        ticket.setArrivalStation(arrivalStation);
-
-        return checkRequestReasonable(ticketRequest, ticket);
+        return checkRequestReasonable(ticketRequest, ticket,true);
     }
 
     /**
@@ -96,15 +97,16 @@ public class TicketService {
      * @return 更新后的车票信息
      * @throws EntityNotFoundException 如果未找到对应记录
      */
-    public TicketResponse updateTicket(Long id, @Valid TicketRequest ticketRequest) {
+    public TicketResponse updateTicket(Long id, @Valid TicketRequest ticketRequest) throws SQLException {
         Ticket existingTicket = ticketRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("车票未找到"));
+        boolean ifStatusChanged = !Objects.equals(existingTicket.getStatus(), ticketRequest.getStatus());
         BeanUtils.copyProperties(ticketRequest, existingTicket);
 
         if (ticketRequest.getOrderId() != null) {
             Order order = orderRepository.findById(ticketRequest.getOrderId())
                     .orElseThrow(() -> new EntityNotFoundException("订单未找到"));
-            existingTicket.setOrder_id(order.getId());
+            existingTicket.setOrderId(order.getId());
         }
 
         if (ticketRequest.getPassengerId() != null) {
@@ -119,22 +121,28 @@ public class TicketService {
             existingTicket.setTrain(train);
         }
 
-        if (ticketRequest.getDepartureStationId() != null) {
-            StationView departureStation = stationViewRepository.findById(Math.toIntExact(ticketRequest.getDepartureStationId()))
-                    .orElseThrow(() -> new EntityNotFoundException("出发站未找到"));
-            existingTicket.setDepartureStation(departureStation);
-        }
-
-        if (ticketRequest.getArrivalStationId() != null) {
-            StationView arrivalStation = stationViewRepository.findById(Math.toIntExact(ticketRequest.getArrivalStationId()))
-                    .orElseThrow(() -> new EntityNotFoundException("到达站未找到"));
-            existingTicket.setArrivalStation(arrivalStation);
-        }
-
-        return checkRequestReasonable(ticketRequest, existingTicket);
+        return checkRequestReasonable(ticketRequest, existingTicket,ifStatusChanged);
     }
 
-    private TicketResponse checkRequestReasonable(@Valid TicketRequest ticketRequest, Ticket existingTicket) {
+    private TicketResponse checkRequestReasonable(@Valid TicketRequest ticketRequest, Ticket existingTicket, boolean ifStatusChanged) throws SQLException {
+        boolean isDepartureStationValid = false;
+        boolean isArrivalStationValid = false;
+
+        for (TrainStop trainStop : existingTicket.getTrain().getTrainStops()) {
+            if (trainStop.getStation().getId().longValue() == ticketRequest.getDepartureStationId()) {
+                existingTicket.setDepartureStation(trainStop.getStation());
+                isDepartureStationValid = true;
+            }
+            if (trainStop.getStation().getId().longValue() == ticketRequest.getArrivalStationId()) {
+                existingTicket.setArrivalStation(trainStop.getStation());
+                isArrivalStationValid = true;
+            }
+        }
+
+        if (!isDepartureStationValid || !isArrivalStationValid) {
+            throw new IllegalArgumentException("出发站或到达站不在列车的停靠站列表中");
+        }
+
         if (ticketRequest.getCarriageId() != null) {
             TrainCarriage carriage = trainCarriageRepository.findById(ticketRequest.getCarriageId())
                     .orElseThrow(() -> new EntityNotFoundException("车厢未找到"));
@@ -145,9 +153,48 @@ public class TicketService {
             Seat seat = seatRepository.findById(ticketRequest.getSeatId())
                     .orElseThrow(() -> new EntityNotFoundException("座位未找到"));
             existingTicket.setSeat(seat);
+            //判断改时间段座位是否可用
+            TrainStop startStation = trainStopRepository.findByTrainIdAndStationId(existingTicket.getTrain().getId(), Long.valueOf(existingTicket.getDepartureStation().getId()));
+            TrainStop endStation = trainStopRepository.findByTrainIdAndStationId(existingTicket.getTrain().getId(), Long.valueOf(existingTicket.getArrivalStation().getId()));
+            LocalDate day = existingTicket.getTrain().getDate();
+            LocalTime startTime = startStation.getArrivalTime();
+            LocalTime endTime = endStation.getArrivalTime();
+            LocalDateTime startDateTime = LocalDateTime.of(day, startTime);
+            LocalDateTime endDateTime = LocalDateTime.of(day, endTime);
+            Optional<SeatLock> existingLock = seatLockRepository.findBySeatIdAndFinish(existingTicket.getSeat().getId(), 0);
+            List<LocalDateTime[]> intervals = existingLock
+                    .stream()
+                    .map(lock -> new LocalDateTime[]{lock.getLockStart(), lock.getExpireTime()})
+                    .toList();
+            boolean hasOverlap = IntervalOverlapChecker.hasOverlap(startDateTime, endDateTime, intervals);
+            if (hasOverlap) throw new SQLException("该时刻次座位已有未完成的锁定任务");
+
+            if (ifStatusChanged && ticketRequest.getCarriageId() != null) {
+                if (ticketRequest.getStatus() == 1 || ticketRequest.getStatus() == 5) {
+                    //已改签，或者已出票
+                    createSeatLockTask(existingTicket.getSeat().getId(), startDateTime, endDateTime);
+                } else if (ticketRequest.getStatus() == 2) {
+                    //取消
+                    seatLockService.deleteBySeatId(existingTicket.getSeat().getId());
+                }
+            }
         }
+
         Ticket updatedTicket = ticketRepository.save(existingTicket);
         return convertToResponse(updatedTicket);
+    }
+    /**
+     * 用户购买车票后添加锁定任务
+     * */
+    private void createSeatLockTask(Long seatId, LocalDateTime startDateTime, LocalDateTime endDateTime) throws SQLException {
+        SeatLock lock = new SeatLock();
+        lock.setSeatId(seatId);
+        lock.setLockStart(startDateTime);
+        lock.setExpireTime(endDateTime);
+        lock.setFinish(0);
+        lock.setReason("用户购买");
+        SeatLock saved = seatLockRepository.save(lock);
+        seatLockService.scheduleStatusUpdate(saved.getId(), seatId, startDateTime, endDateTime);
     }
 
     /**
@@ -172,7 +219,7 @@ public class TicketService {
     private TicketResponse convertToResponse(Ticket ticket) {
         TicketResponse response = new TicketResponse();
         BeanUtils.copyProperties(ticket, response);
-        response.setOrderId(ticket.getOrder_id());
+        response.setOrderId(ticket.getOrderId());
         response.setPassengerId(ticket.getPassenger().getId());
         response.setTrain(ticket.getTrain());
         response.setDepartureStationId(Long.valueOf(ticket.getDepartureStation().getId()));

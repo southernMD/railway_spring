@@ -5,8 +5,6 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.LocalDateTime;
 
 @Data
 public class TicketRequest {
@@ -33,12 +31,6 @@ public class TicketRequest {
     @NotNull(message = "到达站ID不能为空")
     private Long arrivalStationId;
 
-    @NotNull(message = "出发时间不能为空")
-    private LocalTime departureTime;
-
-    @NotNull(message = "到达时间不能为空")
-    private LocalTime arrivalTime;
-
     @NotNull(message = "座位类型不能为空")
     @Min(value = 1, message = "座位类型值必须大于等于0")
     @Max(value = 4, message = "座位类型值必须小于等于4")
@@ -54,7 +46,7 @@ public class TicketRequest {
 
     @NotNull(message = "状态不能为空")
     @Min(value = 0, message = "状态值必须大于等于0")
-    @Max(value = 3, message = "状态值必须小于等于3")
+    @Max(value = 5, message = "状态值必须小于等于5")
     private Integer status;
 //
 //    private BigDecimal refundAmount;

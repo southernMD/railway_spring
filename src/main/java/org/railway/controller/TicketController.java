@@ -1,13 +1,17 @@
 package org.railway.controller;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.annotations.View;
+import org.railway.dto.Views;
 import org.railway.dto.request.TicketRequest;
 import org.railway.dto.response.BaseResponse;
 import org.railway.dto.response.TicketResponse;
 import org.railway.service.TicketService;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -51,7 +55,8 @@ public class TicketController {
      * @return 创建后的车票响应
      */
     @PostMapping
-    public BaseResponse<TicketResponse> createTicket(@Valid @RequestBody TicketRequest ticketRequest) {
+    @JsonView(Views.Basic.class)
+    public BaseResponse<TicketResponse> createTicket(@Valid @RequestBody TicketRequest ticketRequest) throws SQLException {
         TicketResponse ticket = ticketService.createTicket(ticketRequest);
         return BaseResponse.success(ticket);
     }
@@ -66,7 +71,7 @@ public class TicketController {
     @PutMapping("/{id}")
     public BaseResponse<TicketResponse> updateTicket(
             @PathVariable Long id,
-            @Valid @RequestBody TicketRequest ticketRequest) {
+            @Valid @RequestBody TicketRequest ticketRequest) throws SQLException {
         TicketResponse ticket = ticketService.updateTicket(id, ticketRequest);
         return BaseResponse.success(ticket);
     }

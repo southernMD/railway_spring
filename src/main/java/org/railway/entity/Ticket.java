@@ -22,7 +22,7 @@ public class Ticket extends Base{
     private String ticketNo;
 
     @Column(name = "order_id", nullable = false)
-    private Long order_id;
+    private Long orderId;
 
     @ManyToOne
     @JoinColumn(name = "passenger_id", nullable = false)
@@ -42,12 +42,6 @@ public class Ticket extends Base{
     @ManyToOne
     @JoinColumn(name = "arrival_station_id", nullable = false)
     private StationView arrivalStation;
-
-    @Column(nullable = false)
-    private LocalTime departureTime;
-
-    @Column(nullable = false)
-    private LocalTime arrivalTime;
 
     @Column(nullable = false)
     private Integer seatType;

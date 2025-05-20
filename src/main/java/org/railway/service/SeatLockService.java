@@ -8,6 +8,7 @@ import org.railway.entity.Seat;
 import org.railway.entity.SeatLock;
 import org.railway.service.impl.SeatLockRepository;
 import org.railway.service.impl.SeatRepository;
+import org.railway.utils.IntervalOverlapChecker;
 import org.springframework.beans.BeanUtils;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import java.sql.SQLException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -42,10 +44,12 @@ public class SeatLockService {
                 .orElseThrow(() -> new EntityNotFoundException("座位未找到"));
         Long seatId = dto.getSeatId().longValue();
         Optional<SeatLock> existingLock = seatLockRepository.findBySeatIdAndFinish(seatId, 0);
-
-        if (existingLock.isPresent()) {
-            throw new SQLException("该座位已有未完成的锁定任务");
-        }
+        List<LocalDateTime[]> intervals = existingLock
+                .stream()
+                .map(lock -> new LocalDateTime[]{lock.getLockStart(), lock.getExpireTime()})
+                .toList();
+        boolean hasOverlap = IntervalOverlapChecker.hasOverlap(dto.getLockStart(), dto.getExpireTime(), intervals);
+        if (hasOverlap) throw new SQLException("该时刻次座位已有未完成的锁定任务");
 
         SeatLock lock = new SeatLock();
         BeanUtils.copyProperties(dto, lock); // DTO -> Entity
@@ -67,7 +71,7 @@ public class SeatLockService {
     /**
      * 设置定时任务，在指定时间更新状态
      */
-    private void scheduleStatusUpdate(Long taskId,Long seatId, LocalDateTime lockStart, LocalDateTime expireTime) {
+    public void scheduleStatusUpdate(Long taskId,Long seatId, LocalDateTime lockStart, LocalDateTime expireTime) {
         boolean isLockStartInPast = LocalDateTime.now().isAfter(lockStart);
         boolean isExpireTimeInFuture = LocalDateTime.now().isBefore(expireTime);
 
@@ -104,12 +108,20 @@ public class SeatLockService {
      * 更新锁的状态
      */
     private void updateStatus(Long taskId ,Long seatId, Integer newStatus) {
-        Seat lock = seatRepository.findById(seatId)
-                .orElseThrow(() -> new EntityNotFoundException("座位未找到"));
-        SeatLock existing = seatLockRepository.findById(taskId)
-                .orElseThrow(() -> new EntityNotFoundException("任务未找到"));
+        Optional<Seat> seatOpt = seatRepository.findById(seatId);
+        if (seatOpt.isEmpty()) {
+            return; // 座位不存在，静默退出
+        }
+        Optional<SeatLock> lockOpt = seatLockRepository.findById(taskId);
+        if (lockOpt.isEmpty()) {
+            return; // 任务不存在，静默退出
+        }
+        Seat lock = seatOpt.get();
+        SeatLock existing = lockOpt.get();
         lock.setStatus(newStatus);
         existing.setFinish(1);
+
+        // 保存更改
         seatRepository.save(lock);
     }
 

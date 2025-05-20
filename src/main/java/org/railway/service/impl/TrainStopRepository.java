@@ -10,4 +10,6 @@ import java.util.List;
 public interface TrainStopRepository extends JpaRepository<TrainStop, Long> {
     //更具train_id查询所有数据
     List<TrainStop> findAllByTrainId(Long trainId);
+    //更具train_id和station_id查询数据
+    TrainStop findByTrainIdAndStationId(Long trainId, Long stationId);
 }

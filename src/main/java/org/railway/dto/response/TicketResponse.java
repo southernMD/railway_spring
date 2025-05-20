@@ -18,8 +18,6 @@ public class TicketResponse {
     private LocalDate date;
     private Long departureStationId;
     private Long arrivalStationId;
-    private LocalTime departureTime;
-    private LocalTime arrivalTime;
     private Integer seatType;
     private Long carriageId;
     private Long seatId;

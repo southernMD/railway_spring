@@ -32,6 +32,6 @@ public class Order extends Base{
 
     private LocalDateTime paymentTime;
 
-    @OneToMany(mappedBy = "order_id", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "orderId", cascade = CascadeType.ALL)
     private List<Ticket> tickets;
 }
