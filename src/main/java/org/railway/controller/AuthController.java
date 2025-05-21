@@ -1,5 +1,9 @@
 package org.railway.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -27,22 +31,38 @@ import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import org.railway.utils.Email;
 
-
+/**
+ * 认证控制器，提供用户注册、登录、验证码发送、Token刷新等功能。
+ */
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
+@Tag(name = "认证模块", description = "提供用户认证相关的API接口")
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final UserService userService;
-    private final Email emailUtil ;
+    private final Email emailUtil;
     private final TransactionTemplate template;
 
-    // 生成并发送验证码的接口
+    /**
+     * 发送验证码
+     * @param email 用户邮箱
+     * @return 返回验证码发送结果
+     */
+    @Operation(
+            summary = "发送验证码",
+            description = "向指定邮箱发送验证码，验证码有效期为5分钟",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "验证码发送成功"),
+                    @ApiResponse(responseCode = "400", description = "请求参数无效")
+            }
+    )
     @RequestMapping(value = "/send-code", method = {RequestMethod.POST, RequestMethod.GET})
-    public BaseResponse<String> sendVerificationCode(@RequestParam String email) {
+    public BaseResponse<String> sendVerificationCode(
+            @Parameter(description = "用户邮箱", required = true)
+            @RequestParam String email) {
         final String code = GetRandomNumber.generateVerificationCode(6);
-        // 2. 设置过期时间为当前时间 + 5 分钟
         final LocalDateTime expireTime = LocalDateTime.now().plusMinutes(5);
 
         template.execute(status -> {
@@ -50,10 +70,8 @@ public class AuthController {
             return null;
         });
 
-
         String subject = "注册验证码";
-        String htmlContent =
-        """
+        String htmlContent = """
             <div style='display: flex; flex-direction: column; color:#222;'>
               <div>你好：</div>
               <div>你的验证码是：<strong>%s</strong></div>
@@ -66,11 +84,25 @@ public class AuthController {
         return BaseResponse.success("验证码已发送");
     }
 
-    //注册
+    /**
+     * 用户注册
+     * @param request 注册请求DTO，包含用户名、邮箱、密码等信息
+     * @return 返回注册结果及Token信息
+     */
+    @Operation(
+            summary = "用户注册",
+            description = "用户通过邮箱、用户名和验证码进行注册",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "注册成功"),
+                    @ApiResponse(responseCode = "400", description = "请求参数无效或验证码错误")
+            }
+    )
     @PostMapping("/register")
-    public BaseResponse<TokenResponse> register(@Valid @RequestBody RegisterRequest request) {
+    public BaseResponse<TokenResponse> register(
+            @Parameter(description = "注册请求信息", required = true)
+            @Valid @RequestBody RegisterRequest request) {
         if (!request.getPassword().equals(request.getConfirmPassword())) {
-            return BaseResponse.error(400,"两次输入的密码不一致");
+            return BaseResponse.error(400, "两次输入的密码不一致");
         }
         return template.execute(status -> {
             if (userService.existsByUsername(request.getUsername())) {
@@ -89,16 +121,14 @@ public class AuthController {
             if (code.getIsUsed() == 1) {
                 return BaseResponse.error(400, "验证码已被使用");
             }
-            // 5. 保存用户
             User user = new User();
             user.setUsername(request.getUsername());
             user.setEmail(request.getEmail());
-            user.setPassword(request.getPassword()); // 建议在 User 中自动加密处理密码
-            user.setUserType(0); // 默认为普通用户
+            user.setPassword(request.getPassword());
+            user.setUserType(0);
             user.setCreateTime(LocalDateTime.now());
             user.setUsername("牛马人_" + GetRandomNumber.generateVerificationCode(6));
             userService.saveUser(user);
-            // 6. 将验证码标记为已使用
             userService.markVerificationCodeAsUsed(request.getEmail());
 
             Authentication auth = authenticationManager.authenticate(
@@ -113,9 +143,24 @@ public class AuthController {
         });
     }
 
-    // 使用用户名登录
+    /**
+     * 使用用户名登录
+     * @param request 用户名登录请求DTO，包含用户名和密码
+     * @return 返回登录结果及Token信息
+     */
+    @Operation(
+            summary = "使用用户名登录",
+            description = "用户通过用户名和密码进行登录",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "登录成功"),
+                    @ApiResponse(responseCode = "400", description = "请求参数无效"),
+                    @ApiResponse(responseCode = "401", description = "用户名或密码错误")
+            }
+    )
     @PostMapping("/login/username")
-    public BaseResponse<TokenResponse> loginByUsername(@Valid @RequestBody UsernameLoginRequest request) {
+    public BaseResponse<TokenResponse> loginByUsername(
+            @Parameter(description = "用户名登录请求信息", required = true)
+            @Valid @RequestBody UsernameLoginRequest request) {
         Authentication auth = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );
@@ -127,10 +172,24 @@ public class AuthController {
         return BaseResponse.success(new TokenResponse(accessToken, refreshToken));
     }
 
-    // 使用邮箱登录
+    /**
+     * 使用邮箱登录
+     * @param request 邮箱登录请求DTO，包含邮箱和密码
+     * @return 返回登录结果及Token信息
+     */
+    @Operation(
+            summary = "使用邮箱登录",
+            description = "用户通过邮箱和密码进行登录",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "登录成功"),
+                    @ApiResponse(responseCode = "400", description = "请求参数无效"),
+                    @ApiResponse(responseCode = "401", description = "邮箱或密码错误")
+            }
+    )
     @PostMapping("/login/email")
-    public BaseResponse<TokenResponse> loginByEmail(@Valid @RequestBody EmailLoginRequest request) {
-
+    public BaseResponse<TokenResponse> loginByEmail(
+            @Parameter(description = "邮箱登录请求信息", required = true)
+            @Valid @RequestBody EmailLoginRequest request) {
         Authentication auth = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
@@ -141,8 +200,24 @@ public class AuthController {
         return BaseResponse.success(new TokenResponse(accessToken, refreshToken));
     }
 
+    /**
+     * 刷新Token
+     * @param request HTTP请求对象，用于获取刷新Token
+     * @param response HTTP响应对象
+     * @return 返回新的AccessToken
+     * @throws IOException 如果刷新Token无效，则抛出异常
+     */
+    @Operation(
+            summary = "刷新Token",
+            description = "使用刷新Token获取新的AccessToken",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Token刷新成功"),
+                    @ApiResponse(responseCode = "401", description = "刷新Token无效")
+            }
+    )
     @PostMapping("/refresh")
-    public BaseResponse<AccessTokenResponse> refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public BaseResponse<AccessTokenResponse> refreshToken(
+            HttpServletRequest request, HttpServletResponse response) throws IOException {
         String refreshToken = request.getHeader("Authorization");
         if (refreshToken != null && refreshToken.startsWith("Bearer ")) {
             refreshToken = refreshToken.substring(7);
@@ -152,7 +227,6 @@ public class AuthController {
                 return BaseResponse.success(new AccessTokenResponse(accessToken));
             }
         }
-
         throw new AccessDeniedException("Invalid refresh token");
     }
 }

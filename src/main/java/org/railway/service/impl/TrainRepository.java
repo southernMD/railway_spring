@@ -8,5 +8,4 @@ import java.util.List;
 
 public interface TrainRepository extends JpaRepository<Train, Long> {
     List<Train> findByModelIdAndDate(Integer model_id, LocalDate date);
-
 }

@@ -9,10 +9,6 @@ import java.time.LocalDate;
 @Data
 public class TicketRequest {
 
-    @NotNull(message = "票号不能为空")
-    @Size(min = 1, max = 32, message = "票号长度必须在1到32之间")
-    private String ticketNo;
-
     @NotNull(message = "订单ID不能为空")
     private Long orderId;
 

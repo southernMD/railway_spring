@@ -1,6 +1,9 @@
 package org.railway.controller;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.railway.dto.Views;
@@ -20,15 +23,23 @@ import java.util.List;
 @RestController
 @RequestMapping("/trains")
 @RequiredArgsConstructor
+@Tag(name = "列车管理", description = "提供列车的CRUD操作")
 public class TrainController {
 
     private final TrainService trainService;
 
+
     /**
      * 查询所有列车信息
-     *
-     * @return 所有列车的响应数据
+     * @return 返回所有列车的响应数据
      */
+    @Operation(
+            summary = "查询所有列车信息",
+            description = "获取系统中所有列车的详细信息",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "列车列表获取成功")
+            }
+    )
     @GetMapping
     @JsonView(Views.Basic.class)
     public BaseResponse<List<TrainResponse>> getAll() {
@@ -38,11 +49,18 @@ public class TrainController {
 
     /**
      * 根据 ID 查询列车信息
-     *
      * @param id 列车唯一标识
-     * @return 对应的列车响应数据
+     * @return 返回对应的列车响应数据
      * @throws SQLException 如果未找到对应记录
      */
+    @Operation(
+            summary = "根据ID查询列车信息",
+            description = "根据列车ID获取列车的详细信息",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "列车获取成功"),
+                    @ApiResponse(responseCode = "404", description = "列车不存在")
+            }
+    )
     @GetMapping("/{id}")
     @JsonView(Views.Basic.class)
     public  BaseResponse <TrainResponse> getById(@PathVariable Long id) throws SQLException {
@@ -52,11 +70,19 @@ public class TrainController {
 
     /**
      * 创建一个新的列车记录
-     *
-     * @param request 包含列车信息的请求数据
-     * @return 创建后的列车响应数据
+     * @param request 列车请求DTO，包含列车的详细信息
+     * @return 返回创建的列车响应数据
      * @throws SQLException 如果车次编号重复或时间冲突
      */
+    @Operation(
+            summary = "创建列车记录",
+            description = "根据传入的列车信息创建新的列车记录",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "列车创建成功"),
+                    @ApiResponse(responseCode = "400", description = "请求参数无效"),
+                    @ApiResponse(responseCode = "409", description = "车次编号重复或时间冲突")
+            }
+    )
     @PostMapping
     public  BaseResponse<TrainResponse> create(@Valid @RequestBody TrainRequest request) throws SQLException {
         TrainResponse train = trainService.create(request);
@@ -65,12 +91,21 @@ public class TrainController {
 
     /**
      * 更新指定 ID 的列车记录
-     *
-     * @param id      列车唯一标识
-     * @param request 包含新数据的请求对象
-     * @return 更新后的列车响应数据
+     * @param id 列车唯一标识
+     * @param request 列车请求DTO，包含更新的列车信息
+     * @return 返回更新后的列车响应数据
      * @throws SQLException 如果未找到记录或时间冲突
      */
+    @Operation(
+            summary = "更新列车记录",
+            description = "根据列车ID和传入的列车信息更新列车的详细信息",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "列车更新成功"),
+                    @ApiResponse(responseCode = "400", description = "请求参数无效"),
+                    @ApiResponse(responseCode = "404", description = "列车不存在"),
+                    @ApiResponse(responseCode = "409", description = "时间冲突")
+            }
+    )
     @PutMapping("/{id}")
     public BaseResponse<TrainResponse> update(@PathVariable Long id, @Valid @RequestBody TrainRequest request) throws SQLException {
         TrainResponse train = trainService.update(id, request);
@@ -79,10 +114,18 @@ public class TrainController {
 
     /**
      * 删除指定 ID 的列车记录
-     *
      * @param id 列车唯一标识
+     * @return 返回成功信息
      * @throws SQLException 如果未找到记录
      */
+    @Operation(
+            summary = "删除列车记录",
+            description = "根据列车ID删除列车记录",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "列车删除成功"),
+                    @ApiResponse(responseCode = "404", description = "列车不存在")
+            }
+    )
     @DeleteMapping("/{id}")
     public BaseResponse<Object> deleteById(@PathVariable Long id) throws SQLException {
         trainService.deleteById(id);

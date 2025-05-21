@@ -10,6 +10,9 @@ public class SecurityProperties {
     // 定义不需要 Token 的路径
     public static final List<String> PUBLIC_PATHS = List.of(
             "/auth",
-            "/test"
+            "/test",
+            "/api.html",
+            "/swagger-ui",
+            "/api-docs"
     );
 }

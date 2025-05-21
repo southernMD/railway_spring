@@ -19,6 +19,7 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -85,7 +86,7 @@ public class TicketService {
         Train train = trainRepository.findById(ticketRequest.getTrainId())
                 .orElseThrow(() -> new EntityNotFoundException("列车未找到"));
         ticket.setTrain(train);
-
+        ticket.setTicketNo(UUID.randomUUID().toString());
         return checkRequestReasonable(ticketRequest, ticket,true);
     }
 

@@ -1,5 +1,8 @@
 package org.railway.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,18 +27,26 @@ import java.util.List;
 @RestController
 @RequestMapping("/train-models")
 @RequiredArgsConstructor
+@Tag(name = "车型管理", description = "提供车型的CRUD操作")
 public class TrainModelController {
 
     private final TrainModelService service;
 
     /**
      * 创建新的车型
-     * 接收一个 JSON 格式的车型请求对象，并通过服务层创建新车型。
-     *
-     * @param trainModel 包含车型信息的请求对象
-     * @return 返回创建成功的车型响应对象
-     * @throws SQLException 如果数据库操作失败，则抛出异常
+     * @param trainModel 车型请求DTO，包含车型的详细信息
+     * @return 返回创建的车型响应DTO
+     * @throws SQLException 如果数据库操作失败
      */
+    @Operation(
+            summary = "创建车型",
+            description = "根据传入的车型信息创建新的车型",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "车型创建成功"),
+                    @ApiResponse(responseCode = "400", description = "请求参数无效"),
+                    @ApiResponse(responseCode = "500", description = "数据库操作失败")
+            }
+    )
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
@@ -52,6 +63,16 @@ public class TrainModelController {
      * @return 返回更新后的车型响应对象
      * @throws SQLException 如果数据库操作失败，则抛出异常
      */
+    @Operation(
+            summary = "更新车型信息",
+            description = "根据车型ID和传入的车型信息更新车型的详细信息",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "车型更新成功"),
+                    @ApiResponse(responseCode = "400", description = "请求参数无效"),
+                    @ApiResponse(responseCode = "404", description = "车型不存在"),
+                    @ApiResponse(responseCode = "500", description = "数据库操作失败")
+            }
+    )
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
@@ -69,6 +90,15 @@ public class TrainModelController {
      * @return 返回查询到的车型响应对象
      * @throws SQLException 如果数据库操作失败，则抛出异常
      */
+    @Operation(
+            summary = "根据ID查询车型信息",
+            description = "根据车型ID获取车型的详细信息",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "车型获取成功"),
+                    @ApiResponse(responseCode = "404", description = "车型不存在"),
+                    @ApiResponse(responseCode = "500", description = "数据库操作失败")
+            }
+    )
     @GetMapping("/{id}")
     public BaseResponse<TrainModelResponse> getById(@PathVariable Integer id) throws SQLException {
         return BaseResponse.success(service.getById(id));
@@ -80,6 +110,13 @@ public class TrainModelController {
      *
      * @return 返回包含所有车型信息的响应对象列表
      */
+    @Operation(
+            summary = "查询所有车型信息",
+            description = "获取系统中所有车型的详细信息",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "车型列表获取成功")
+            }
+    )
     @GetMapping
     public BaseResponse<List<TrainModelResponse>> getAll() {
         return BaseResponse.success(service.getAll());
@@ -93,6 +130,15 @@ public class TrainModelController {
      * @return 返回 HTTP 200 表示删除成功
      * @throws SQLException 如果数据库操作失败，则抛出异常
      */
+    @Operation(
+            summary = "删除车型信息",
+            description = "根据车型ID删除车型信息",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "车型删除成功"),
+                    @ApiResponse(responseCode = "404", description = "车型不存在"),
+                    @ApiResponse(responseCode = "500", description = "数据库操作失败")
+            }
+    )
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
@@ -107,6 +153,14 @@ public class TrainModelController {
      * @param criteria 为实体字段的任意值
      * @return 返回 查询结果
      */
+    @Operation(
+            summary = "根据条件查询车型信息",
+            description = "根据传入的筛选条件查询车型信息",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "车型查询成功"),
+                    @ApiResponse(responseCode = "400", description = "请求参数无效")
+            }
+    )
     @PostMapping("/search")
     public BaseResponse<List<TrainModelResponse>> search(@Valid @RequestBody TrainModel criteria) {
         return BaseResponse.success(service.searchByCriteria(criteria));
