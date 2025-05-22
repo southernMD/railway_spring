@@ -1,20 +1,31 @@
 package org.railway.service;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.railway.dto.request.UserRequest;
+import org.railway.dto.response.SeatResponse;
+import org.railway.dto.response.UserResponse;
+import org.railway.entity.Seat;
 import org.railway.entity.User;
 import org.railway.entity.VerificationCode;
 import org.railway.service.impl.UserRepository;
 import org.railway.service.impl.VerificationCodeRepository;
+import org.railway.utils.JwtUserInfo;
+import org.railway.utils.JwtUtil;
+import org.springframework.beans.BeanUtils;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -59,8 +70,8 @@ public class UserService implements UserDetailsService {
      * @param code       新的验证码
      * @param expireTime 新的过期时间
      */
-    public void updateCodeAndExpireTime(String email, String code, LocalDateTime expireTime) {
-        int updated = verificationCode.updateCodeAndExpireTimeByEmail(email, code, expireTime);
+    public void updateCodeAndExpireTime(String email, String code, LocalDateTime expireTime,Integer isUsed) {
+        int updated = verificationCode.updateCodeAndExpireTimeAndIsUsedByEmail(email, code, expireTime,isUsed);
 
         if (updated == 0) {
             VerificationCode newCode = new VerificationCode();
@@ -131,5 +142,72 @@ public class UserService implements UserDetailsService {
      */
     public User findByUsername(String username) {
         return userRepository.findByUsername(username).orElse(null);
+    }
+    /**
+     *  创建管理员
+     * */
+    public UserResponse createAdmin(UserRequest userRequestDTO) {
+        User user = new User();
+        BeanUtils.copyProperties(userRequestDTO, user);
+        user.setStatus(1);
+        user.setUserType(1);
+        user = userRepository.save(user);
+        BeanUtils.copyProperties(user, new UserResponse());
+        return convertToResponse(user);
+    }
+    /**
+     *  获取所有用户
+     * */
+    public List<UserResponse> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+    /**
+     *  封禁用户
+     * */
+    public void banUser(Long userId) {
+        if(ifOneself(userId)) throw new RuntimeException("不能解禁自己");
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("用户不存在"));
+        user.setStatus(0); // 0 表示封禁状态
+        userRepository.save(user);
+        //TODO 在redis添加黑名单
+    }
+
+    /**
+     *  解禁用户
+     * */
+    public void unBanUser(Long userId) {
+        if(ifOneself(userId)) throw new RuntimeException("不能解禁自己");
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("用户不存在"));
+        user.setStatus(1);
+        userRepository.save(user);
+        //TODO 在redis移除黑名单
+    }
+
+    /**
+     * 将座位实体转换为响应 DTO
+     *
+     * @param user 座位实体对象
+     * @return 响应数据
+     */
+    private UserResponse convertToResponse(User user) {
+        UserResponse response = new UserResponse();
+        BeanUtils.copyProperties(user,response); // Entity -> Response
+        return response;
+    }
+
+
+    private boolean ifOneself(Long userId) {
+        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        JwtUserInfo userInfo = JwtUtil.extractUserInfo(token);
+        Long jwtUserId = userInfo.getUserId();
+        return userId.equals(jwtUserId);
     }
 }

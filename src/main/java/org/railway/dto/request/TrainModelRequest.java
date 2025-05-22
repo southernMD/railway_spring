@@ -18,9 +18,9 @@ public class TrainModelRequest extends TrainModel {
     private String modelCode;
 
     @NotNull(message = "状态不能为空")
-    @Min(value = 1, message = "状态值最小为1")
-    @Max(value = 3, message = "状态值最大为3")
-    private Integer status = 1;  // 默认值1
+    @Min(value = 0, message = "状态值最小为0")
+    @Max(value = 1, message = "状态值最大为1")
+    private Integer status;  // 默认值1
 
     @NotNull(message = "最大载客量不能为空")
     @Positive(message = "最大载客量必须是正数")

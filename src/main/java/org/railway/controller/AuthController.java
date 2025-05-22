@@ -67,7 +67,7 @@ public class AuthController {
         final LocalDateTime expireTime = LocalDateTime.now().plusMinutes(5);
 
         template.execute(status -> {
-            userService.updateCodeAndExpireTime(email, code, expireTime);
+            userService.updateCodeAndExpireTime(email, code, expireTime,0);
             return null;
         });
 
@@ -127,8 +127,8 @@ public class AuthController {
             user.setEmail(request.getEmail());
             user.setPassword(request.getPassword());
             user.setUserType(0);
+            user.setStatus(1);
             user.setCreateTime(LocalDateTime.now());
-            user.setUsername("牛马人_" + GetRandomNumber.generateVerificationCode(6));
             user = userService.saveUser(user);
             userService.markVerificationCodeAsUsed(request.getEmail());
 
@@ -140,7 +140,7 @@ public class AuthController {
             String accessToken = JwtUtil.generateAccessToken(auth.getName(),user.getId());
             String refreshToken = JwtUtil.generateRefreshToken(auth.getName(),user.getId());
 
-            return BaseResponse.success(new TokenResponse(accessToken, refreshToken), "注册成功");
+            return BaseResponse.success(new TokenResponse(accessToken, refreshToken,false,user.getId(),user.getUsername()), "注册成功");
         });
     }
 
@@ -170,7 +170,7 @@ public class AuthController {
         String accessToken = JwtUtil.generateAccessToken(auth.getName(),user.getId());
         String refreshToken = JwtUtil.generateRefreshToken(auth.getName(),user.getId());
 
-        return BaseResponse.success(new TokenResponse(accessToken, refreshToken));
+        return BaseResponse.success(new TokenResponse(accessToken, refreshToken,user.getUserType() == 1,user.getId(),user.getUsername()));
     }
 
     /**
@@ -198,7 +198,7 @@ public class AuthController {
         User user = userService.findByEmail(request.getEmail());
         String accessToken = JwtUtil.generateAccessToken(auth.getName(),user.getId());
         String refreshToken = JwtUtil.generateRefreshToken(auth.getName(),user.getId());
-        return BaseResponse.success(new TokenResponse(accessToken, refreshToken));
+        return BaseResponse.success(new TokenResponse(accessToken, refreshToken,user.getUserType() == 1,user.getId(),user.getUsername()));
     }
 
     /**
@@ -216,7 +216,7 @@ public class AuthController {
                     @ApiResponse(responseCode = "401", description = "刷新Token无效")
             }
     )
-    @PostMapping("/refresh")
+    @GetMapping("/refresh")
     public BaseResponse<AccessTokenResponse> refreshToken(
             HttpServletRequest request, HttpServletResponse response) throws IOException {
         String refreshToken = request.getHeader("Authorization");

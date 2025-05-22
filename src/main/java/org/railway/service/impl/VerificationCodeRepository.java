@@ -17,9 +17,11 @@ public interface VerificationCodeRepository extends JpaRepository<VerificationCo
     void updateIsUsedByEmail(String email);
 
     @Modifying
-    @Query("UPDATE VerificationCode v SET v.code = :code, v.expireTime = :expireTime WHERE v.email = :email")
-    int updateCodeAndExpireTimeByEmail(@Param("email") String email,
+    @Query("UPDATE VerificationCode v SET v.code = :code, v.expireTime = :expireTime,v.isUsed = :isUsed WHERE v.email = :email")
+    int updateCodeAndExpireTimeAndIsUsedByEmail(@Param("email") String email,
                                         @Param("code") String code,
-                                        @Param("expireTime") LocalDateTime expireTime);
+                                        @Param("expireTime") LocalDateTime expireTime,
+                                        @Param("isUsed") Integer isUsed
+    );
 
 }

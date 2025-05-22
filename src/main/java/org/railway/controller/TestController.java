@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 public class TestController {
 
     @RequestMapping(value = "/test", method = {RequestMethod.POST, RequestMethod.GET})
-    @CheckUserId
+//    @CheckUserId
     public ResponseEntity<String> test(@RequestBody ChangeRecordRequest request) {
         System.out.println(request);
         return ResponseEntity.ok("Hello, Railway! This is a test endpoint.");

@@ -23,25 +23,10 @@ public class User extends Base{
     @Column(length = 100, unique = true)
     private String email;
 
-    @Column(length = 20, unique = true)
-    private String phone;
-
-    @Column(length = 50)
-    private String realName;
-
-    @Column(length = 18)
-    private String idCard;
+    @Column(nullable = false)
+    private Integer userType;
 
     @Column(nullable = false)
-    private Integer userType = 0;
-
-    @Column(nullable = false)
-    private Integer status = 1;
-
-    @Column(nullable = false)
-    private Integer emailVerified = 0;
-
-    @Column(nullable = false)
-    private Integer phoneVerified = 0;
+    private Integer status;
 
 }

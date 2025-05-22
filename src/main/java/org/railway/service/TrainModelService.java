@@ -44,7 +44,7 @@ public class TrainModelService {
             throw new SQLException("车型代码已被其他车型使用");
         }
 
-        BeanUtils.copyProperties(dto, existing);
+        BeanUtils.copyProperties(dto, existing, "carriages");
         TrainModel updated = repository.save(existing);
         return convertToResponse(updated);
     }
