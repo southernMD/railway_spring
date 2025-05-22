@@ -3,6 +3,7 @@ package org.railway.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.railway.annotation.CheckUserId;
 import org.railway.dto.request.ChangeRecordRequest;
 import org.railway.dto.response.BaseResponse;
 import org.railway.dto.response.ChangeRecordResponse;
@@ -42,6 +43,7 @@ public class ChangeRecordController {
                     @ApiResponse(responseCode = "404", description = "原票、新票或订单不存在")
             }
     )
+    @CheckUserId
     @PostMapping
     public BaseResponse<ChangeRecordResponse> createChangeRecord(@RequestBody ChangeRecordRequest request) {
         ChangeRecordResponse responseDTO = changeRecordService.createChangeRecord(request);
@@ -61,6 +63,7 @@ public class ChangeRecordController {
                     @ApiResponse(responseCode = "404", description = "改签记录不存在")
             }
     )
+    @CheckUserId
     @GetMapping("/{id}")
     public BaseResponse<ChangeRecordResponse> getChangeRecordById(@PathVariable Long id) {
         ChangeRecordResponse responseDTO = changeRecordService.getChangeRecordById(id);
@@ -79,6 +82,7 @@ public class ChangeRecordController {
                     @ApiResponse(responseCode = "200", description = "改签记录列表获取成功")
             }
     )
+    @CheckUserId
     @GetMapping
     public BaseResponse<List<ChangeRecordResponse>> getAllChangeRecords() {
         List<ChangeRecordResponse> responseDTOs = changeRecordService.getAllChangeRecords();
@@ -100,6 +104,7 @@ public class ChangeRecordController {
     )
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @CheckUserId
     public BaseResponse<Object> deleteChangeRecord(@PathVariable Long id) {
         changeRecordService.deleteChangeRecord(id);
         return BaseResponse.success(null, "删除成功");
@@ -119,6 +124,7 @@ public class ChangeRecordController {
             }
     )
     @GetMapping("/ticket/{ticketId}")
+    @CheckUserId
     public BaseResponse<List<ChangeRecordResponse>> getChangeRecordsByTicketId(@PathVariable Long ticketId) {
         List<ChangeRecordResponse> responseDTOs = changeRecordService.getChangeRecordsByTicketId(ticketId);
         return BaseResponse.success(responseDTOs);
@@ -138,6 +144,7 @@ public class ChangeRecordController {
                     @ApiResponse(responseCode = "404", description = "改签记录不存在")
             }
     )
+    @CheckUserId
     @PutMapping("/status/{id}")
     public BaseResponse<ChangeRecordResponse> updateChangeRecordStatus(@PathVariable Long id, @RequestParam Integer status) {
         ChangeRecordResponse responseDTO = changeRecordService.updateChangeRecordStatus(id, status);

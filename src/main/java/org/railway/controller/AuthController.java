@@ -18,6 +18,7 @@ import org.railway.entity.User;
 import org.railway.entity.VerificationCode;
 import org.railway.service.UserService;
 import org.railway.utils.GetRandomNumber;
+import org.railway.utils.JwtUserInfo;
 import org.railway.utils.JwtUtil;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -128,7 +129,7 @@ public class AuthController {
             user.setUserType(0);
             user.setCreateTime(LocalDateTime.now());
             user.setUsername("牛马人_" + GetRandomNumber.generateVerificationCode(6));
-            userService.saveUser(user);
+            user = userService.saveUser(user);
             userService.markVerificationCodeAsUsed(request.getEmail());
 
             Authentication auth = authenticationManager.authenticate(
@@ -136,8 +137,8 @@ public class AuthController {
             );
             SecurityContextHolder.getContext().setAuthentication(auth);
 
-            String accessToken = JwtUtil.generateAccessToken(auth.getName());
-            String refreshToken = JwtUtil.generateRefreshToken(auth.getName());
+            String accessToken = JwtUtil.generateAccessToken(auth.getName(),user.getId());
+            String refreshToken = JwtUtil.generateRefreshToken(auth.getName(),user.getId());
 
             return BaseResponse.success(new TokenResponse(accessToken, refreshToken), "注册成功");
         });
@@ -165,9 +166,9 @@ public class AuthController {
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );
         SecurityContextHolder.getContext().setAuthentication(auth);
-
-        String accessToken = JwtUtil.generateAccessToken(auth.getName());
-        String refreshToken = JwtUtil.generateRefreshToken(auth.getName());
+        User user = userService.findByUsername(request.getUsername());
+        String accessToken = JwtUtil.generateAccessToken(auth.getName(),user.getId());
+        String refreshToken = JwtUtil.generateRefreshToken(auth.getName(),user.getId());
 
         return BaseResponse.success(new TokenResponse(accessToken, refreshToken));
     }
@@ -194,9 +195,9 @@ public class AuthController {
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
         SecurityContextHolder.getContext().setAuthentication(auth);
-
-        String accessToken = JwtUtil.generateAccessToken(auth.getName());
-        String refreshToken = JwtUtil.generateRefreshToken(auth.getName());
+        User user = userService.findByEmail(request.getEmail());
+        String accessToken = JwtUtil.generateAccessToken(auth.getName(),user.getId());
+        String refreshToken = JwtUtil.generateRefreshToken(auth.getName(),user.getId());
         return BaseResponse.success(new TokenResponse(accessToken, refreshToken));
     }
 
@@ -222,8 +223,8 @@ public class AuthController {
         if (refreshToken != null && refreshToken.startsWith("Bearer ")) {
             refreshToken = refreshToken.substring(7);
             if (JwtUtil.validateToken(refreshToken)) {
-                String username = JwtUtil.extractUsername(refreshToken);
-                String accessToken = JwtUtil.generateAccessToken(username);
+                JwtUserInfo userInfo = JwtUtil.extractUserInfo(refreshToken);
+                String accessToken = JwtUtil.generateAccessToken(userInfo.getUsername(),userInfo.getUserId());
                 return BaseResponse.success(new AccessTokenResponse(accessToken));
             }
         }

@@ -11,6 +11,7 @@ import org.railway.dto.request.TrainRequest;
 import org.railway.dto.response.BaseResponse;
 import org.railway.dto.response.TrainResponse;
 import org.railway.service.TrainService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.SQLException;
@@ -84,6 +85,7 @@ public class TrainController {
             }
     )
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public  BaseResponse<TrainResponse> create(@Valid @RequestBody TrainRequest request) throws SQLException {
         TrainResponse train = trainService.create(request);
         return  BaseResponse.success(train);
@@ -107,6 +109,7 @@ public class TrainController {
             }
     )
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public BaseResponse<TrainResponse> update(@PathVariable Long id, @Valid @RequestBody TrainRequest request) throws SQLException {
         TrainResponse train = trainService.update(id, request);
         return BaseResponse.success(train);
@@ -127,6 +130,7 @@ public class TrainController {
             }
     )
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public BaseResponse<Object> deleteById(@PathVariable Long id) throws SQLException {
         trainService.deleteById(id);
         return BaseResponse.success(null, "删除成功");

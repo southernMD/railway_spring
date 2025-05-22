@@ -11,6 +11,7 @@ import org.railway.config.SecurityProperties;
 import org.railway.entity.User;
 import org.railway.service.UserService;
 import org.railway.service.impl.UserRepository;
+import org.railway.utils.JwtUserInfo;
 import org.railway.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -45,23 +46,23 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         String refreshToken = extractRefreshToken(request);
 
         if (accessToken != null && JwtUtil.validateToken(accessToken)) {
-            String username = JwtUtil.extractUsername(accessToken);
-            Optional<User> user = userRepository.findByUsername(username);
-            authenticateUser(request, username,user.get().getUserType());
+            JwtUserInfo UserInfo = JwtUtil.extractUserInfo(accessToken);
+            Optional<User> user = userRepository.findByUsername(UserInfo.getUsername());
+            authenticateUser(request, UserInfo.getUsername(),user.get().getUserType());
             filterChain.doFilter(request, response);
             return;
         }
 
         // Access Token 失效，尝试用 Refresh Token 刷新
         if (refreshToken != null && JwtUtil.validateToken(refreshToken)) {
-            String username = JwtUtil.extractUsername(refreshToken);
-            String newAccessToken = JwtUtil.generateAccessToken(username);
+            JwtUserInfo UserInfo = JwtUtil.extractUserInfo(accessToken);
+            String newAccessToken = JwtUtil.generateAccessToken(UserInfo.getUsername(),UserInfo.getUserId());
 
             // 设置新的 Access Token 到 Header
             response.setHeader("Authorization", "Bearer " + newAccessToken);
-            Optional<User> user = userRepository.findByUsername(username);
+            Optional<User> user = userRepository.findByUsername(UserInfo.getUsername());
             // 放行并认证用户
-            authenticateUser(request, username,user.get().getUserType());
+            authenticateUser(request, UserInfo.getUsername(),user.get().getUserType());
             filterChain.doFilter(request, response);
             return;
         }

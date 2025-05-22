@@ -16,4 +16,6 @@ public class ChangeRecordRequest {
 
     @NotNull(message = "订单ID不能为空")
     private Long orderId;
+
+    private Long userId;
 }

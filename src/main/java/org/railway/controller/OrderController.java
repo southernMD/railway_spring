@@ -6,11 +6,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.railway.annotation.CheckUserId;
 import org.railway.dto.Views;
 import org.railway.dto.request.OrderRequest;
 import org.railway.dto.response.BaseResponse;
 import org.railway.dto.response.OrderResponse;
 import org.railway.service.OrderService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -40,6 +42,7 @@ public class OrderController {
     )
     @GetMapping
     @JsonView(Views.Basic.class)
+    @PreAuthorize("hasRole('ADMIN')")
     public BaseResponse<List<OrderResponse>> getAllOrders() {
         List<OrderResponse> orders = orderService.getAllOrders();
         return BaseResponse.success(orders);
@@ -59,6 +62,7 @@ public class OrderController {
             }
     )
     @GetMapping("/{id}")
+    @CheckUserId
     public BaseResponse<OrderResponse> getOrderById(@PathVariable Long id) {
         OrderResponse order = orderService.getOrderById(id);
         return BaseResponse.success(order);
@@ -78,6 +82,7 @@ public class OrderController {
             }
     )
     @PostMapping
+    @CheckUserId
     public BaseResponse<OrderResponse> createOrder(@Valid @RequestBody OrderRequest orderRequest) {
         OrderResponse order = orderService.createOrder(orderRequest);
         return BaseResponse.success(order);
@@ -99,6 +104,7 @@ public class OrderController {
             }
     )
     @PutMapping("/{id}")
+    @CheckUserId
     public BaseResponse<OrderResponse> updateOrder(
             @PathVariable Long id,
             @Valid @RequestBody OrderRequest orderRequest) {
@@ -120,6 +126,7 @@ public class OrderController {
             }
     )
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public BaseResponse<Object> deleteOrder(@PathVariable Long id) {
         orderService.deleteOrder(id);
         return BaseResponse.success(null, "删除成功");
@@ -138,9 +145,10 @@ public class OrderController {
                     @ApiResponse(responseCode = "404", description = "用户不存在")
             }
     )
-    @GetMapping("/user/{userId}")
+    @GetMapping("/user")
     @JsonView(Views.Basic.class)
-    public BaseResponse<List<OrderResponse>> getOrdersByUserId(@PathVariable Long userId) {
+    @CheckUserId
+    public BaseResponse<List<OrderResponse>> getOrdersByUserId(@RequestParam Long userId) {
         List<OrderResponse> orders = orderService.getOrdersByUserId(userId);
         return BaseResponse.success(orders);
     }

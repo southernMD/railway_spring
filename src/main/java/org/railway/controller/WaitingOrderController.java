@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.railway.annotation.CheckUserId;
 import org.railway.dto.request.WaitingOrderRequest;
 import org.railway.dto.response.BaseResponse;
 import org.railway.entity.WaitingOrder;
@@ -37,6 +38,7 @@ public class WaitingOrderController {
             }
     )
     @PostMapping
+    @CheckUserId
     public BaseResponse<WaitingOrder> create(@RequestBody WaitingOrderRequest request) {
         return BaseResponse.success(waitingOrderService.createWaitingOrder(request));
     }
@@ -55,6 +57,7 @@ public class WaitingOrderController {
             }
     )
     @GetMapping("/{id}")
+    @CheckUserId
     public BaseResponse<WaitingOrder> getById(@PathVariable Long id) {
         return BaseResponse.success(waitingOrderService.getWaitingOrder(id));
     }
@@ -72,8 +75,9 @@ public class WaitingOrderController {
                     @ApiResponse(responseCode = "404", description = "用户不存在")
             }
     )
-    @GetMapping("/user/{userId}")
-    public BaseResponse<List<WaitingOrder>> getByUser(@PathVariable Long userId) {
+    @GetMapping("/user")
+    @CheckUserId
+    public BaseResponse<List<WaitingOrder>> getByUser(@RequestParam Long userId) {
         return BaseResponse.success(waitingOrderService.getUserWaitingOrders(userId));
     }
 
@@ -93,6 +97,7 @@ public class WaitingOrderController {
             }
     )
     @PutMapping("/{id}")
+    @CheckUserId
     public BaseResponse<WaitingOrder> update(
             @PathVariable Long id,
             @RequestBody WaitingOrderRequest request) {
@@ -113,6 +118,7 @@ public class WaitingOrderController {
             }
     )
     @DeleteMapping("/{id}")
+    @CheckUserId
     public BaseResponse<Void> cancel(@PathVariable Long id) {
         waitingOrderService.cancelWaitingOrder(id);
         return BaseResponse.success(null,"取消成功");

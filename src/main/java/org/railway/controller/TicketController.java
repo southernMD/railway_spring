@@ -7,11 +7,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.annotations.View;
+import org.railway.annotation.CheckUserId;
 import org.railway.dto.Views;
 import org.railway.dto.request.TicketRequest;
 import org.railway.dto.response.BaseResponse;
 import org.railway.dto.response.TicketResponse;
 import org.railway.service.TicketService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.SQLException;
@@ -83,6 +85,7 @@ public class TicketController {
     )
     @PostMapping
     @JsonView(Views.Basic.class)
+    @CheckUserId
     public BaseResponse<TicketResponse> createTicket(@Valid @RequestBody TicketRequest ticketRequest) throws SQLException {
         TicketResponse ticket = ticketService.createTicket(ticketRequest);
         return BaseResponse.success(ticket);
@@ -106,6 +109,7 @@ public class TicketController {
             }
     )
     @PutMapping("/{id}")
+    @CheckUserId
     public BaseResponse<TicketResponse> updateTicket(
             @PathVariable Long id,
             @Valid @RequestBody TicketRequest ticketRequest) throws SQLException {
@@ -127,6 +131,7 @@ public class TicketController {
             }
     )
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public BaseResponse<Object> deleteTicket(@PathVariable Long id) {
         ticketService.deleteTicket(id);
         return BaseResponse.success(null, "删除成功");

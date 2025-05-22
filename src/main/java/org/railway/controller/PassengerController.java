@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.railway.annotation.CheckUserId;
 import org.railway.dto.request.PassengerRequest;
 import org.railway.dto.response.BaseResponse;
 import org.railway.dto.response.PassengerResponse;
@@ -42,6 +43,7 @@ public class PassengerController {
             }
     )
     @PostMapping
+    @CheckUserId
     public BaseResponse<PassengerResponse> createPassenger(
             @Parameter(description = "乘客请求信息", required = true)
             @Valid @RequestBody PassengerRequest passengerRequest) {
@@ -63,6 +65,7 @@ public class PassengerController {
             }
     )
     @GetMapping("/{id}")
+    @CheckUserId
     public BaseResponse<PassengerResponse> getPassengerById(
             @Parameter(description = "乘客ID", required = true)
             @PathVariable Long id) {
@@ -103,6 +106,7 @@ public class PassengerController {
             }
     )
     @PutMapping("/{id}")
+    @CheckUserId
     public BaseResponse<PassengerResponse> updatePassenger(
             @Parameter(description = "乘客ID", required = true)
             @PathVariable Long id,
@@ -126,6 +130,7 @@ public class PassengerController {
             }
     )
     @DeleteMapping("/{id}")
+    @CheckUserId
     public BaseResponse<Object> deletePassenger(
             @Parameter(description = "乘客ID", required = true)
             @PathVariable Long id) {
@@ -146,10 +151,11 @@ public class PassengerController {
                     @ApiResponse(responseCode = "404", description = "用户不存在")
             }
     )
-    @GetMapping("/user/{userId}")
+    @CheckUserId
+    @GetMapping("/user")
     public BaseResponse<List<PassengerResponse>> getPassengersByUserId(
             @Parameter(description = "用户ID", required = true)
-            @PathVariable Long userId) {
+            @RequestParam Long userId) {
         List<PassengerResponse> responseDTOs = passengerService.getPassengersByUserId(userId);
         return BaseResponse.success(responseDTOs);
     }

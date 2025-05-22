@@ -132,7 +132,6 @@ public class TrainStopController {
     )
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     public BaseResponse<Object> delete(@PathVariable Long id) {
         trainStopService.delete(id);
         return BaseResponse.success(null, "删除成功");

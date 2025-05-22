@@ -4,7 +4,6 @@ import jakarta.security.auth.message.AuthException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.railway.filters.JwtAuthorizationFilter;
-import org.railway.filters.UserIdCheckFilter;
 import org.railway.service.impl.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -48,8 +47,7 @@ public class Security implements HandlerExceptionResolver {
                         .requestMatchers("/test").permitAll()     // 放行 /test 接口
                         .anyRequest().authenticated()             // 其他接口都需要认证
                 )
-                .addFilterBefore(new JwtAuthorizationFilter(userRepository,handlerExceptionResolver), UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(new UserIdCheckFilter(), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new JwtAuthorizationFilter(userRepository,handlerExceptionResolver), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 

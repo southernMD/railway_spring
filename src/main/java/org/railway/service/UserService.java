@@ -105,11 +105,31 @@ public class UserService implements UserDetailsService {
      * 保存新用户
      *
      * @param user 用户实体
+     * @return 用户实体
      */
-    public void saveUser(User user) {
+    public User saveUser(User user) {
         // 可选：密码加密处理（推荐）
         // BCrypt 加密示例：
         // user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepository.save(user);
+       return userRepository.save(user);
+    }
+
+    /**
+     * 查询用户更具email
+     *
+     * @param email 邮箱
+     * @return 用户实体
+     */
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email).orElse(null);
+    }
+    /**
+     * 查询用户更具username
+     *
+     * @param username 用户名
+     * @return 用户实体
+     */
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username).orElse(null);
     }
 }

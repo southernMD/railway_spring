@@ -8,6 +8,7 @@ import org.railway.dto.request.SeatLockRequest;
 import org.railway.dto.response.BaseResponse;
 import org.railway.dto.response.SeatLockResponse;
 import org.railway.service.SeatLockService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.SQLException;
@@ -43,6 +44,7 @@ public class SeatLockController {
             }
     )
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public BaseResponse<SeatLockResponse> create(@Valid @RequestBody SeatLockRequest dto) throws SQLException {
         return BaseResponse.success(service.create(dto));
     }
@@ -61,6 +63,7 @@ public class SeatLockController {
             }
     )
     @DeleteMapping("/{seatId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public BaseResponse<Object> delete(@PathVariable Long seatId) {
         service.deleteBySeatId(seatId);
         return BaseResponse.success(null, "删除成功");

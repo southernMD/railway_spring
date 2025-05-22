@@ -18,4 +18,5 @@ public abstract class Base {
     @Column(name = "update_time", nullable = false)
     @UpdateTimestamp
     private LocalDateTime updateTime;
+
 }
