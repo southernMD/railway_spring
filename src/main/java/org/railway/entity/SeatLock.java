@@ -5,7 +5,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
-import java.time.LocalDate;
 
 @Entity
 @Table(name = "seat_locks")
@@ -28,4 +27,6 @@ public class SeatLock extends Base{
     private String reason;
 
     private Integer finish = 0;
+
+    private Integer type;
 }

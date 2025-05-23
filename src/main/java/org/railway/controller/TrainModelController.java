@@ -3,6 +3,7 @@ package org.railway.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.railway.dto.request.TrainModelUpdateRequest;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -78,7 +79,7 @@ public class TrainModelController {
     @Transactional
     public BaseResponse<TrainModelResponse> update(
             @PathVariable Integer id,
-            @RequestBody @Valid TrainModelRequest trainModel) throws SQLException {
+            @RequestBody @Valid TrainModelUpdateRequest trainModel) throws SQLException {
         return BaseResponse.success(service.update(id, trainModel));
     }
 

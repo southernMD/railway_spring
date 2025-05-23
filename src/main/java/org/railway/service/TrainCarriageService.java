@@ -10,8 +10,10 @@ import org.railway.service.impl.TrainCarriageRepository;
 import org.railway.service.impl.TrainModelRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
-
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -24,6 +26,7 @@ public class TrainCarriageService {
 
     private final TrainCarriageRepository carriageRepository;
     private final TrainModelRepository trainModelRepository;
+    private final TransactionTemplate template;
     /**
      * 创建一个新的车厢记录
      *
@@ -32,20 +35,11 @@ public class TrainCarriageService {
      * @throws EntityNotFoundException 如果指定的车型不存在
      */
     public TrainCarriageResponse create(TrainCarriageRequest dto) {
-        TrainModel trainModel = trainModelRepository.findById(dto.getModelId())
+        trainModelRepository.findById(dto.getModelId())
                 .orElseThrow(() -> new EntityNotFoundException("车型未找到"));
 
-        // 计算当前车厢的 seatCount 总和
-        int totalSeatCount = trainModel.getCarriages().stream()
-                .mapToInt(TrainCarriage::getSeatCount)
-                .sum();
-
-        // 判断是否超过 maxCapacity
-        if (totalSeatCount + dto.getSeatCount() > trainModel.getMaxCapacity()) {
-            throw new IllegalArgumentException("车厢座位数超过车型最大容量");
-        }
         TrainCarriage carriage = new TrainCarriage();
-        BeanUtils.copyProperties(dto, carriage);
+        BeanUtils.copyProperties(dto, carriage,"seats");
         TrainCarriage saved = carriageRepository.save(carriage);
         return convertToResponse(saved);
     }
@@ -61,23 +55,11 @@ public class TrainCarriageService {
     public TrainCarriageResponse update(Long id, TrainCarriageRequest dto) {
         TrainCarriage carriage = carriageRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("车厢未找到"));
-
-        // 获取 TrainModel
-        TrainModel trainModel = trainModelRepository.findById(dto.getModelId())
-                .orElseThrow(() -> new EntityNotFoundException("车型未找到"));
-
-        // 计算当前车厢的 seatCount 总和（排除当前车厢）
-        int totalSeatCount = trainModel.getCarriages().stream()
-                .filter(c -> !c.getId().equals(id))
-                .mapToInt(TrainCarriage::getSeatCount)
-                .sum();
-
-        // 判断是否超过 maxCapacity
-        if (totalSeatCount + dto.getSeatCount() > trainModel.getMaxCapacity()) {
-            throw new IllegalArgumentException("车厢座位数超过车型最大容量");
+        if(!Objects.equals(carriage.getCarriageType(), dto.getCarriageType()) && !carriage.getSeats().isEmpty()){
+            throw new IllegalArgumentException("车厢类型不能在座位数非空时更改");
         }
-
-        BeanUtils.copyProperties(dto, carriage);
+        carriage.setCarriageType(dto.getCarriageType());
+//        BeanUtils.copyProperties(dto, carriage,"seats");
         return convertToResponse(carriageRepository.save(carriage));
     }
 
@@ -117,6 +99,54 @@ public class TrainCarriageService {
 
         return carriageRepository.findByModelId(modelId).stream()
                 .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+    /**
+     * 交换两个车厢的位置
+     * @param carriageId1  第一个车厢的ID
+     * @param carriageId2  第二个车厢的ID
+     * @throws EntityNotFoundException 如果车厢未找到
+     * @return  void
+     * */
+    public List<TrainCarriage> swapCarriages(Long carriageId1, Long carriageId2) {
+        TrainCarriage carriage1 = carriageRepository.findById(carriageId1)
+                .orElseThrow(() -> new EntityNotFoundException("车厢未找到"));
+        TrainCarriage carriage2 = carriageRepository.findById(carriageId2)
+                .orElseThrow(() -> new EntityNotFoundException("车厢未找到"));
+        if(!Objects.equals(carriage1.getModelId(), carriage2.getModelId())){
+            throw new IllegalArgumentException("车厢不属于同一车型");
+        }
+        Integer carriage1CarriageNumber = carriage1.getCarriageNumber();
+        Integer carriage2CarriageNumber = carriage2.getCarriageNumber();
+        carriage1.setCarriageNumber(-1);
+        carriageRepository.save(carriage1);
+        carriage2.setCarriageNumber(-2);
+        carriageRepository.save(carriage2);
+        carriage1.setCarriageNumber(carriage2CarriageNumber);
+        carriage2.setCarriageNumber(carriage1CarriageNumber);
+        TrainCarriage c1 = carriageRepository.save(carriage1);
+        TrainCarriage c2 = carriageRepository.save(carriage2);
+        return List.of(c1,c2);
+    }
+    /**
+     * 批量更新车厢信息
+     *
+     * @param dtos 包含多个车厢更新请求的列表
+     * @return 更新后的车厢响应数据列表
+     * @throws EntityNotFoundException 如果车厢或车型不存在
+     */
+    @Transactional
+    public List<TrainCarriageResponse> batchUpdate(List<TrainCarriageRequest> dtos) {
+        return dtos.stream()
+                .map(dto -> {
+                    TrainCarriage carriage = carriageRepository.findById(dto.getId())
+                            .orElseThrow(() -> new EntityNotFoundException("车厢未找到"));
+                    if (!Objects.equals(carriage.getCarriageType(), dto.getCarriageType()) && !carriage.getSeats().isEmpty()) {
+                        throw new IllegalArgumentException("车厢类型不能在座位数非空时更改");
+                    }
+                    carriage.setCarriageType(dto.getCarriageType());
+                    return convertToResponse(carriageRepository.save(carriage));
+                })
                 .collect(Collectors.toList());
     }
 

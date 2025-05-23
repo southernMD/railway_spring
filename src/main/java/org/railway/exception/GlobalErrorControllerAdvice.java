@@ -62,6 +62,7 @@ public class GlobalErrorControllerAdvice {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<BaseResponse<Void>> handleOtherErrors(Exception ex) {
+        System.out.println("捕获的异常类型: " + ex.getClass().getName());
         BaseResponse<Void> response = BaseResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }

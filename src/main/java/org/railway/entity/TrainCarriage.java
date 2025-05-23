@@ -27,9 +27,6 @@ public class TrainCarriage extends Base{
     @Column(nullable = false)
     private Integer carriageType;
 
-    @Column(nullable = false)
-    private Integer seatCount;
-
     // 车厢与座位是一对多关系
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "carriage_id") // 指定外键字段名

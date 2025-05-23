@@ -20,4 +20,7 @@ public class SeatLockRequest {
     private LocalDateTime expireTime;
 
     private String reason;
+
+    @NotNull(message = "锁定类型不能为空")
+    private Integer type;
 }

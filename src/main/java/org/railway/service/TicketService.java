@@ -193,6 +193,7 @@ public class TicketService {
         lock.setLockStart(startDateTime);
         lock.setExpireTime(endDateTime);
         lock.setFinish(0);
+        lock.setType(1);
         lock.setReason("用户购买");
         SeatLock saved = seatLockRepository.save(lock);
         seatLockService.scheduleStatusUpdate(saved.getId(), seatId, startDateTime, endDateTime);

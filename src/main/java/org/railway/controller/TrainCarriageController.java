@@ -127,4 +127,42 @@ public class TrainCarriageController {
     public BaseResponse<List<TrainCarriageResponse>> getByModelId(@PathVariable Integer modelId) {
         return BaseResponse.success(service.getByModelId(modelId));
     }
+
+    /**
+     * 交换两个车厢的位置
+     *
+     * @param carriageId1 第一个车厢的ID
+     * @param carriageId2 第二个车厢的ID
+     * @return 成功记录
+     */
+    @Operation(
+            summary = "交换两个车厢的位置"
+    )
+    @GetMapping("/swap")
+    public BaseResponse<Object> swapCarriages(@RequestParam Long carriageId1, @RequestParam Long carriageId2) {
+        return BaseResponse.success( service.swapCarriages(carriageId1, carriageId2),  "交换成功");
+    }
+
+    /**
+     * 批量更新车厢
+     *
+     * @param dtos 包含多个车厢更新请求的列表
+     * @return 返回更新后的车厢响应DTO列表
+     */
+    @Operation(
+            summary = "批量更新车厢",
+            description = "根据传入的车厢信息列表批量更新车厢",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "车厢批量更新成功"),
+                    @ApiResponse(responseCode = "400", description = "请求参数无效"),
+                    @ApiResponse(responseCode = "404", description = "车厢不存在")
+            }
+    )
+    @PutMapping("/batch-update")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    public BaseResponse<List<TrainCarriageResponse>> batchUpdate(@Valid @RequestBody List<TrainCarriageRequest> dtos) {
+        return BaseResponse.success(service.batchUpdate(dtos));
+    }
+
 }

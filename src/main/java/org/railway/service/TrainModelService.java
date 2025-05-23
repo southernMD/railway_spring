@@ -3,6 +3,7 @@ package org.railway.service;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.railway.dto.request.TrainModelRequest;
+import org.railway.dto.request.TrainModelUpdateRequest;
 import org.railway.dto.response.TrainModelResponse;
 import org.railway.entity.TrainModel;
 import org.railway.service.impl.TrainModelRepository;
@@ -34,7 +35,7 @@ public class TrainModelService {
     }
 
     // 更新车型
-    public TrainModelResponse update(Integer id, @Valid TrainModelRequest dto) throws SQLException {
+    public TrainModelResponse update(Integer id, @Valid TrainModelUpdateRequest dto) throws SQLException {
         TrainModel existing = repository.findById(id)
                 .orElseThrow(() -> new SQLException("车型不存在"));
 
@@ -43,7 +44,12 @@ public class TrainModelService {
                 repository.existsByModelCode(dto.getModelCode())) {
             throw new SQLException("车型代码已被其他车型使用");
         }
-
+        int existingSeatCount = existing.getCarriages().stream()
+                .mapToInt(carriage -> carriage.getSeats().size())
+                .sum();
+        if(existingSeatCount > dto.getMaxCapacity()){
+            throw new SQLException("载客量至少需要为%s".formatted(existingSeatCount));
+        }
         BeanUtils.copyProperties(dto, existing, "carriages");
         TrainModel updated = repository.save(existing);
         return convertToResponse(updated);

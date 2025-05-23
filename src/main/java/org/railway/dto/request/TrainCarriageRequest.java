@@ -20,6 +20,4 @@ public class TrainCarriageRequest extends TrainCarriage {
     @NotNull(message = "车厢类型不能为空")
     private Integer carriageType;
 
-    @NotNull(message = "座位数量不能为空")
-    private Integer seatCount;
 }

@@ -105,6 +105,7 @@ public class WaitingOrderService {
     @Scheduled(fixedDelay = 300000)
     @Transactional
     public void processWaitingOrders() {
+        System.out.println("执行候补任务");
         // 1. 获取所有未处理的候补订单
         List<WaitingOrder> activeOrders = waitingOrderRepository.findByStatusOrderByCreateTimeAsc(0);
         // 假设1表示活跃状态
@@ -125,7 +126,7 @@ public class WaitingOrderService {
             LocalDateTime startTime = LocalDateTime.of(day, startStop.getArrivalTime());
             LocalDateTime endTime = LocalDateTime.of(day, endStop.getArrivalTime());
             //如果任务超过1小时，则标记该任务已经过期
-            if(LocalDateTime.now().minusHours(1).isAfter(startTime)){
+            if(LocalDateTime.now().isAfter(startTime.minusHours(1))){
                 order.setStatus(3);
                 order.setExpireTime(LocalDateTime.now());
                 waitingOrderRepository.save(order);
@@ -152,19 +153,17 @@ public class WaitingOrderService {
 
     private void handleAvailableSeat(WaitingOrder order, Long seatId,LocalDateTime startTime, LocalDateTime endTime) {
         // 1. 创建座位锁定记录
+        order.setStatus(1); // 1表示已完成
+        waitingOrderRepository.save(order);
+
+        // 2. 更新候补订单状态为已完成
         SeatLock lock = new SeatLock();
         lock.setSeatId(seatId);
         lock.setLockStart(startTime);
         lock.setExpireTime(endTime);
-        lock.setReason("候补订单分配座位");
-        seatLockRepository.save(lock);
-
-        // 2. 更新候补订单状态为已完成
-        order.setStatus(1); // 1表示已完成
-        waitingOrderRepository.save(order);
-
+        lock.setType(1);
         lock.setFinish(0);
-        lock.setReason("用户购买");
+        lock.setReason("候补订单分配座位");
         SeatLock saved = seatLockRepository.save(lock);
         seatLockService.scheduleStatusUpdate(saved.getId(), seatId, startTime, endTime);
         // 3. 这里可以添加其他业务逻辑，如发送通知等
