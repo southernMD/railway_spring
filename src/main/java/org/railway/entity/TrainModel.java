@@ -37,6 +37,7 @@ public class TrainModel extends Base{
 
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "model_id") // 指定外键字段名
+    @JsonView(Views.Detailed.class)
     private List<TrainCarriage> carriages;
 
 }

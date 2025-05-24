@@ -40,10 +40,10 @@ public class SeatLockService {
      */
     public SeatLockResponse create(SeatLockRequest dto) throws SQLException {
         // 校验座位是否存在
-        Seat seat = seatRepository.findById(dto.getSeatId().longValue())
+        Seat seat = seatRepository.findById(dto.getSeatId())
                 .orElseThrow(() -> new EntityNotFoundException("座位未找到"));
-        Long seatId = dto.getSeatId().longValue();
-        Optional<SeatLock> existingLock = seatLockRepository.findBySeatIdAndFinish(seatId, 0);
+        Long seatId = dto.getSeatId();
+        List<SeatLock> existingLock = seatLockRepository.findAllBySeatIdAndFinish(seatId, 0);
         List<LocalDateTime[]> intervals = existingLock
                 .stream()
                 .map(lock -> new LocalDateTime[]{lock.getLockStart(), lock.getExpireTime()})
@@ -59,13 +59,34 @@ public class SeatLockService {
     }
 
     /**
-     * 删除指定 seatId 的座位锁定记录
+     * 取消指定 id 的座位锁定记录
      *
-     * @param seatId 座位唯一标识（seat_id）
+     * @param id 锁定记录唯一标识（id）
+     * @return 修改完的座位锁定记录
      */
-    public void deleteBySeatId(Long seatId) {
-        Optional<SeatLock> existing = seatLockRepository.findBySeatId(seatId);
-        existing.ifPresent(seatLockRepository::delete);
+    public SeatLock deleteBySeatId(Long id) {
+        Optional<SeatLock> existing = seatLockRepository.findById(id);
+        if (existing.isEmpty()) return null;
+        existing.get().setFinish(2);
+        return seatLockRepository.save(existing.get());
+    }
+    /**
+     * 立刻完成指定id 的座位锁定记录
+     *
+     * @param id 锁定记录唯一标识（id）
+     * @return 修改完的座位锁定记录
+     */
+    public SeatLock completeBySeatId(Long id) {
+        Optional<SeatLock> existing = seatLockRepository.findById(id);
+        if (existing.isEmpty()) return null;
+        existing.get().setFinish(1);
+        SeatLock result = seatLockRepository.save(existing.get());
+        Optional<Seat> seat = seatRepository.findById(existing.get().getSeatId());
+        if (seat.isEmpty()) return null;
+        Seat s = seat.get();
+        s.setStatus(1);
+        seatRepository.save(s);
+        return result;
     }
 
     /**
@@ -113,16 +134,17 @@ public class SeatLockService {
             return; // 座位不存在，静默退出
         }
         Optional<SeatLock> lockOpt = seatLockRepository.findById(taskId);
-        if (lockOpt.isEmpty()) {
+        if (lockOpt.isEmpty() || lockOpt.get().getFinish() != 0) {
             return; // 任务不存在，静默退出
         }
         Seat lock = seatOpt.get();
         SeatLock existing = lockOpt.get();
         lock.setStatus(newStatus);
-        existing.setFinish(1);
+        existing.setFinish(newStatus);
 
         // 保存更改
         seatRepository.save(lock);
+        seatLockRepository.save(existing);
     }
 
     /**

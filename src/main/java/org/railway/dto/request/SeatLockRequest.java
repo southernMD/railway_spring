@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Data
 public class SeatLockRequest {
     @NotNull(message = "座位ID不能为空")
-    private Integer seatId;
+    private Long seatId;
 
     @NotNull(message = "锁定开始时间不能为空")
     private LocalDateTime lockStart;

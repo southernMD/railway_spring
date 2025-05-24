@@ -14,6 +14,6 @@ public interface SeatLockRepository extends JpaRepository<SeatLock, Long> {
      */
     Optional<SeatLock> findBySeatId(Long seatId);
     List<SeatLock> findAllByFinish(Integer finish);
-    Optional<SeatLock> findBySeatIdAndFinish(Long seatId, Integer finish);
+    List<SeatLock> findAllBySeatIdAndFinish(Long seatId, Integer finish);
 
 }

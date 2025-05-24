@@ -24,7 +24,7 @@ public class TrainStop extends Base {
 
     @ManyToOne
     @JoinColumn(name = "station_id", nullable = false)
-    private StationView station;
+    private Station station;
 
     @Column(nullable = false)
     private Integer sequence;

@@ -162,7 +162,7 @@ public class TicketService {
             LocalTime endTime = endStation.getArrivalTime();
             LocalDateTime startDateTime = LocalDateTime.of(day, startTime);
             LocalDateTime endDateTime = LocalDateTime.of(day, endTime);
-            Optional<SeatLock> existingLock = seatLockRepository.findBySeatIdAndFinish(existingTicket.getSeat().getId(), 0);
+            List<SeatLock> existingLock = seatLockRepository.findAllBySeatIdAndFinish(existingTicket.getSeat().getId(), 0);
             List<LocalDateTime[]> intervals = existingLock
                     .stream()
                     .map(lock -> new LocalDateTime[]{lock.getLockStart(), lock.getExpireTime()})

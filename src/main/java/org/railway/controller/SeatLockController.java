@@ -50,22 +50,39 @@ public class SeatLockController {
     }
 
     /**
-     * 删除指定 seat_id 的座位锁定记录
-     * @param seatId 座位唯一标识
+     * 取消指定 id 的座位锁定记录
+     * @param id 锁定记录的唯一标识
      * @return 返回成功信息
      */
     @Operation(
-            summary = "删除座位锁定记录",
-            description = "根据座位ID删除座位锁定记录",
+            summary = "取消座位锁定记录",
+            description = "根据座位ID取消座位锁定记录",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "座位锁定记录删除成功"),
+                    @ApiResponse(responseCode = "200", description = "座位锁定记录取消成功"),
                     @ApiResponse(responseCode = "404", description = "座位锁定记录不存在")
             }
     )
-    @DeleteMapping("/{seatId}")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public BaseResponse<Object> delete(@PathVariable Long seatId) {
-        service.deleteBySeatId(seatId);
-        return BaseResponse.success(null, "删除成功");
+    public BaseResponse<Object> delete(@PathVariable Long id) {
+        return BaseResponse.success(service.deleteBySeatId(id), "取消成功");
+    }
+    /**
+     * 完成指定 id 的座位锁定记录
+     * @param id 锁定记录的唯一标识
+     * @return 返回成功信息
+     */
+    @Operation(
+            summary = "完成座位锁定记录",
+            description = "根据座位ID完成座位锁定记录",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "座位锁定记录完成成功"),
+                    @ApiResponse(responseCode = "404", description = "座位锁定记录不存在")
+            }
+    )
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public BaseResponse<Object> complete(@PathVariable Long id) {
+        return BaseResponse.success(service.completeBySeatId(id), "完成成功");
     }
 }

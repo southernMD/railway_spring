@@ -62,6 +62,22 @@ public class StationController {
     public BaseResponse<List<Station>> getAllStations() {
         return BaseResponse.success(stationService.getAllStations());
     }
+    /**
+     * 查询开放车站
+     * @return 获取所有开放车站
+     * */
+    @Operation(
+            summary = "查询开放车站",
+            description = "获取系统中所有开放车站的详细信息",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "车站列表获取成功")
+            }
+    )
+    @GetMapping("/open")
+    public BaseResponse<List<Station>> getAllOpenStations() {
+        return BaseResponse.success(stationService.getAllOpenStations());
+    }
+
 
     /**
      * 根据ID查询车站

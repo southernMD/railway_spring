@@ -3,6 +3,8 @@ package org.railway.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.railway.dto.request.SeatBatchDelRequest;
+import org.railway.dto.response.BatchDeleteResponse;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.validation.Valid;
 import org.railway.dto.request.SeatRequest;
@@ -148,5 +150,26 @@ public class SeatController {
     @GetMapping("/carriage/{carriageId}")
     public BaseResponse<List<SeatResponse>> getByCarriageId(@PathVariable Long carriageId) {
         return BaseResponse.success(service.getByCarriageId(carriageId));
+    }
+    /**
+     * 批量删除座位
+     *
+     * @param request 批量删除请求DTO，包含需要删除的座位ID列表
+     * @return 删除成功信息
+     */
+    @Operation(
+            summary = "批量删除座位",
+            description = "根据传入的座位ID列表批量删除座位",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "座位批量删除成功"),
+                    @ApiResponse(responseCode = "400", description = "请求参数无效"),
+                    @ApiResponse(responseCode = "404", description = "座位不存在")
+            }
+
+    )
+    @PostMapping("/batch-delete")
+    @PreAuthorize("hasRole('ADMIN')")
+    public BaseResponse<BatchDeleteResponse> deleteBatch(@Valid @RequestBody SeatBatchDelRequest request) {
+       return BaseResponse.success(service.deleteBatch(request.getSeatIds()));
     }
 }

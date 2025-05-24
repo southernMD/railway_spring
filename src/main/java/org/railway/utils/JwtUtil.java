@@ -12,7 +12,7 @@ import java.util.Date;
 @Component
 public class JwtUtil {
     private static final Key SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256); // 生成安全的密钥
-    private static final long ACCESS_TOKEN_EXPIRATION = 600_0 * 20; // 10 分钟
+    private static final long ACCESS_TOKEN_EXPIRATION = 100_0 * 60  ; // 1分钟
     private static final long REFRESH_TOKEN_EXPIRATION = 2_592_000_000L; // 30 天
 
     // 生成 Access Token

@@ -39,6 +39,8 @@ public class SeatLockTaskRecovery {
             if (isLockStartInFuture) {
                 Runnable lockTask = () -> updateStatus(taskId, seatId, 0);
                 scheduleTask(lockTask, lockStart);
+            } else if (isExpireTimeInFuture) {  // 新增逻辑：lockStart已过但未过期，立即锁定
+                updateStatus(taskId, seatId, 0); // 立即执行锁定
             }
 
             // ========== 处理解锁任务 ========== //
@@ -63,7 +65,7 @@ public class SeatLockTaskRecovery {
     }
 
     /**
-     * 更新座位状态，并标记任务为已完成
+     * 更新座位状态，解锁座位标记任务为已完成，锁定座位标记为未完成
      */
     private void updateStatus(Long taskId, Long seatId, Integer newStatus) {
         Seat seat = seatRepository.findById(seatId)
@@ -71,10 +73,10 @@ public class SeatLockTaskRecovery {
         seat.setStatus(newStatus);
         seatRepository.save(seat);
 
-        // 标记任务为已完成
+        // 标记任务
         SeatLock lock = seatLockRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("找不到任务 ID：" + taskId));
-        lock.setFinish(1);
+        lock.setFinish(newStatus);
         seatLockRepository.save(lock);
     }
 }

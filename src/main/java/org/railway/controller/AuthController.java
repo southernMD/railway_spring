@@ -216,7 +216,7 @@ public class AuthController {
                     @ApiResponse(responseCode = "401", description = "刷新Token无效")
             }
     )
-    @GetMapping("/refresh")
+    @PostMapping("/refresh")
     public BaseResponse<AccessTokenResponse> refreshToken(
             HttpServletRequest request, HttpServletResponse response) throws IOException {
         String refreshToken = request.getHeader("Authorization");
@@ -228,6 +228,6 @@ public class AuthController {
                 return BaseResponse.success(new AccessTokenResponse(accessToken));
             }
         }
-        throw new AccessDeniedException("Invalid refresh token");
+        return BaseResponse.error(401, "刷新Token无效");
     }
 }

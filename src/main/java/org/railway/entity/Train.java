@@ -26,16 +26,16 @@ public class Train extends Base{
 
     @OneToOne
     @JoinColumn(name = "model_id", nullable = false)
-    @JsonView(Views.Other.class)
+//    @JsonView(Views.Other.class)
     private TrainModel model;
 
     @OneToOne
     @JoinColumn(name = "start_station_id", nullable = false)
-    private StationView startStation;
+    private Station startStation;
 
     @OneToOne
     @JoinColumn(name = "end_station_id", nullable = false)
-    private StationView endStation;
+    private Station endStation;
 
     @Column(nullable =  false)
     private LocalDate date;

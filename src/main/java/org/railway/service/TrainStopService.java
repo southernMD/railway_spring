@@ -6,9 +6,11 @@ import lombok.RequiredArgsConstructor;
 import org.railway.dto.request.TrainStopBatchUpdateRequest;
 import org.railway.dto.request.TrainStopRequest;
 import org.railway.dto.response.TrainStopResponse;
+import org.railway.entity.Station;
 import org.railway.entity.StationView;
 import org.railway.entity.Train;
 import org.railway.entity.TrainStop;
+import org.railway.service.impl.StationRepository;
 import org.railway.service.impl.StationViewRepository;
 import org.railway.service.impl.TrainRepository;
 import org.railway.service.impl.TrainStopRepository;
@@ -16,9 +18,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -29,6 +29,7 @@ public class TrainStopService {
     private final TrainStopRepository trainStopRepository;
     private final TrainRepository trainRepository;
     private final StationViewRepository stationViewRepository;
+    private final StationRepository stationRepository;
 
     /**
      * 创建 TrainStop
@@ -38,13 +39,15 @@ public class TrainStopService {
         // 获取对应的 Train
         Train train = trainRepository.findById(dto.getTrainId())
                 .orElseThrow(() -> new EntityNotFoundException("Train 未找到"));
-
+        if(Objects.equals(train.getStartStation().getId(), dto.getStationId()) || Objects.equals(train.getEndStation().getId(), dto.getStationId())){
+            throw new IllegalArgumentException("不能添加改车次的起始站或终点站为中间停靠站");
+        }
         TrainStop trainStop = new TrainStop();
         BeanUtils.copyProperties(dto, trainStop);
 
         validateTrainStop(trainStop, train);
 
-        StationView station = stationViewRepository.findById(Math.toIntExact(dto.getStationId()))
+        Station station = stationRepository.findByIdAndStatus(Math.toIntExact(dto.getStationId()),1)
                 .orElseThrow(() -> new EntityNotFoundException("站点未找到或不可用"));
 
         trainStop.setStation(station);
@@ -82,13 +85,15 @@ public class TrainStopService {
 
         Train train = trainRepository.findById(dto.getTrainId())
                 .orElseThrow(() -> new EntityNotFoundException("Train 未找到"));
-
+        if(Objects.equals(train.getStartStation().getId(), dto.getStationId()) || Objects.equals(train.getEndStation().getId(), dto.getStationId())){
+            throw new IllegalArgumentException("不能添加改车次的起始站或终点站为中间停靠站");
+        }
         BeanUtils.copyProperties(dto, trainStop);
         trainStop.setId(id);
         // 校验 TrainStop
         validateTrainStop(trainStop, train);
 
-        StationView station = stationViewRepository.findById(Math.toIntExact(dto.getStationId()))
+        Station station = stationRepository.findByIdAndStatus(Math.toIntExact(dto.getStationId()),1)
                 .orElseThrow(() -> new EntityNotFoundException("站点未找到"));
         trainStop.setStation(station);
 
@@ -114,7 +119,12 @@ public class TrainStopService {
     public List<TrainStopResponse> batchUpdate(@Valid TrainStopBatchUpdateRequest dto) {
         Train train = trainRepository.findById(dto.getTrainId())
                 .orElseThrow(() -> new EntityNotFoundException("Train 未找到"));
-        List<TrainStop> originTrainStop = trainStopRepository.findAllByTrainId(dto.getTrainId());
+        List<TrainStop> originTrainStop = new ArrayList<>();
+        for(TrainStopRequest trainStopRequest : dto.getTrainStops()){
+            TrainStop trainStop = new TrainStop();
+            BeanUtils.copyProperties(trainStopRequest, trainStop);
+            originTrainStop.add(trainStop);
+        }
         // dto.getTrainStops() 与 originTrainStop合并，忽略掉所有trainId不为dto.getTrainId()的trainStop
         Map<Long, TrainStopRequest> requestMap = dto.getTrainStops().stream()
                 .collect(Collectors.toMap(TrainStopRequest::getId, Function.identity()));
@@ -125,10 +135,16 @@ public class TrainStopService {
                     // 如果传入的 trainStops 中包含该 trainStop，则更新字段
                     if (requestMap.containsKey(trainStop.getId())) {
                         TrainStopRequest request = requestMap.get(trainStop.getId());
-                        BeanUtils.copyProperties(request, trainStop);
-                        StationView station = stationViewRepository.findById(Math.toIntExact(request.getStationId()))
-                                .orElseThrow(() -> new EntityNotFoundException("站点未找到或不可用"));
-                        trainStop.setStation(station);
+
+                        if(Objects.equals(train.getStartStation().getId(), request.getStationId()) ||
+                                Objects.equals(train.getEndStation().getId(), request.getStationId())){
+                            throw new IllegalArgumentException("不能添加该车次的起始站或终点站为中间停靠站");
+                        }
+
+//                        BeanUtils.copyProperties(request, trainStop);
+//                        Station station = stationRepository.findByIdAndStatus(Math.toIntExact(request.getStationId()),1)
+//                                .orElseThrow(() -> new EntityNotFoundException("站点未找到或不可用"));
+//                        trainStop.setStation(station);
                     }
                 })
                 .sorted(Comparator.comparingInt(TrainStop::getSequence))  // 按 sequence 升序排序

@@ -138,7 +138,7 @@ public class WaitingOrderService {
                     flatMap(carriage -> carriage.getSeats().stream()).toList();
 
             for (Seat seat : seats) {
-                List<LocalDateTime[]> lockPlanSeats = seatLockRepository.findBySeatIdAndFinish(seat.getId(), 0).stream().
+                List<LocalDateTime[]> lockPlanSeats = seatLockRepository.findAllBySeatIdAndFinish(seat.getId(), 0).stream().
                                                 map(lock -> new LocalDateTime[]{lock.getLockStart(), lock.getExpireTime()})
                                                 .toList();
 

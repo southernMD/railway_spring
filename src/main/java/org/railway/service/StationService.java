@@ -19,6 +19,13 @@ public class StationService {
     public List<Station> getAllStations() {
         return stationRepository.findAll();
     }
+    /**
+     * 查询开放车站
+     * @return List<Station>
+     * */
+    public List<Station> getAllOpenStations() {
+        return stationRepository.getAllByStatus(1);
+    }
 
     public Optional<Station> getStationById(Integer id) {
         return stationRepository.findById(id);

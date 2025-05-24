@@ -1,9 +1,12 @@
 package org.railway.controller;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.railway.dto.Views;
 import org.railway.dto.request.TrainModelUpdateRequest;
+import org.railway.dto.response.TrainModelSimpleResponse;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +15,6 @@ import org.railway.dto.response.BaseResponse;
 import org.railway.dto.response.TrainModelResponse;
 import org.railway.entity.TrainModel;
 import org.railway.service.TrainModelService;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -121,6 +123,25 @@ public class TrainModelController {
     @GetMapping
     public BaseResponse<List<TrainModelResponse>> getAll() {
         return BaseResponse.success(service.getAll());
+    }
+
+    /**
+     * 获取所有车型信息
+     * 查询并返回系统中所有的车型信息列表。
+     *
+     * @return 返回包含所有车型信息的响应对象列表
+     */
+    @Operation(
+            summary = "查询所有车型简单信息",
+            description = "获取系统中所有车型的简单信息",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "车型列表获取成功")
+            }
+    )
+    @GetMapping("/simple")
+    @JsonView(Views.Basic.class)
+    public BaseResponse<List<TrainModelSimpleResponse>> getAllSimple() {
+        return BaseResponse.success(service.getAllSimple());
     }
 
     /**

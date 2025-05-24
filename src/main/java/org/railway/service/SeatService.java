@@ -1,16 +1,23 @@
 package org.railway.service;
 
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.railway.dto.request.SeatRequest;
+import org.railway.dto.response.BatchDeleteResponse;
 import org.railway.dto.response.SeatResponse;
 import org.railway.entity.Seat;
-import org.railway.entity.TrainModel;
 import org.railway.service.impl.SeatRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -22,7 +29,9 @@ import java.util.stream.Collectors;
 public class SeatService {
 
     private final SeatRepository seatRepository;
-
+    @PersistenceContext
+    private EntityManager entityManager;
+    private final PlatformTransactionManager transactionManager;
     /**
      * 创建一个新的座位记录
      *
@@ -101,4 +110,47 @@ public class SeatService {
         BeanUtils.copyProperties(seat,response); // Entity -> Response
         return response;
     }
+    /**
+     * 批量删除座位
+     *
+     * @param seatIds 座位Id数据列表
+     * @return 成功删除的结果和失败删除的结果
+     */
+    public BatchDeleteResponse deleteBatch(Long[] seatIds) {
+        BatchDeleteResponse result = new BatchDeleteResponse();
+
+        for (Long seatId : seatIds) {
+            try {
+                // 使用单独事务删除每个座位
+                boolean success = executeInNewTransaction(() -> {
+                    try {
+                        Optional<Seat> seatOpt = seatRepository.findById(seatId);
+                        if (seatOpt.isPresent()) {
+                            seatRepository.deleteById(seatId);
+                            entityManager.flush();
+                            return true;
+                        }
+                        return false;
+                    } catch (Exception e) {
+                        return false;
+                    }
+                });
+                if (success) {
+                    result.getSuccess().add(seatId);
+                } else {
+                    result.getFailed().add(seatId);
+                }
+            } catch (Exception e) {
+                result.getFailed().add(seatId);
+            }
+        }
+        return result;
+    }
+    // 编程式事务管理辅助方法
+    private <T> T executeInNewTransaction(Supplier<T> action) {
+        TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+        transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        return transactionTemplate.execute(status -> action.get());
+    }
+
 }

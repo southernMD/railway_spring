@@ -5,6 +5,9 @@ import lombok.RequiredArgsConstructor;
 import org.railway.dto.request.TrainModelRequest;
 import org.railway.dto.request.TrainModelUpdateRequest;
 import org.railway.dto.response.TrainModelResponse;
+import org.railway.dto.response.TrainModelSimpleResponse;
+import org.railway.dto.response.TrainResponse;
+import org.railway.entity.Train;
 import org.railway.entity.TrainModel;
 import org.railway.service.impl.TrainModelRepository;
 import org.railway.utils.EntitySpecifications;
@@ -67,6 +70,24 @@ public class TrainModelService {
         return repository.findAll().stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
+    }
+    //获取所有车型简单数据
+    public List<TrainModelSimpleResponse> getAllSimple() {
+        return repository.getAllByStatus(1).stream()
+                .map(trainModel -> {
+                    TrainModelSimpleResponse response = new TrainModelSimpleResponse();
+                    BeanUtils.copyProperties(trainModel, response);
+                    response.setTotalSeats(calculateTotalSeats(trainModel));
+                    return response;
+                })
+                .collect(Collectors.toList());
+    }
+
+
+    private Integer calculateTotalSeats(TrainModel model) {
+        return model.getCarriages().stream()
+                .mapToInt(carriage -> carriage.getSeats().size())
+                .sum();
     }
 
     // 删除车型

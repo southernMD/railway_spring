@@ -6,5 +6,6 @@ import org.railway.entity.TrainModel;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class TrainModelResponse extends TrainModel {
+public class TrainModelSimpleResponse extends TrainModel {
+    private Integer totalSeats;
 }
