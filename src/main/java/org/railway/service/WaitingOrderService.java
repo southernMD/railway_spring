@@ -3,10 +3,7 @@ package org.railway.service;
 import lombok.RequiredArgsConstructor;
 import org.railway.dto.request.WaitingOrderRequest;
 import org.railway.entity.*;
-import org.railway.service.impl.SeatLockRepository;
-import org.railway.service.impl.TrainRepository;
-import org.railway.service.impl.TrainSeatRepository;
-import org.railway.service.impl.WaitingOrderRepository;
+import org.railway.service.impl.*;
 import org.springframework.beans.BeanUtils;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -18,6 +15,7 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.railway.utils.IntervalOverlapChecker.hasOverlap;
 
@@ -33,6 +31,7 @@ public class WaitingOrderService {
     private final SeatLockRepository seatLockRepository;
     private final TrainRepository trainRepository;
     private final SeatLockService seatLockService;
+    private final TrainCarriageRepository trainCarriageRepository;
 
     /**
      * 创建候补订单
@@ -44,6 +43,13 @@ public class WaitingOrderService {
         WaitingOrder order = new WaitingOrder();
         BeanUtils.copyProperties(request, order);
         return waitingOrderRepository.save(order);
+    }
+    /**
+     * 获取所有的候补订单
+     * @return 候补订单
+     */
+    public List<WaitingOrder> getAllWaitingOrders() {
+        return waitingOrderRepository.findAll();
     }
 
     /**
@@ -111,31 +117,54 @@ public class WaitingOrderService {
         // 假设1表示活跃状态
         for (WaitingOrder order : activeOrders) {
             // 2. 获取该列车指定座位类型的座位列表
-            Integer startId = order.getDepartureStation().getId();
-            Integer endId = order.getArrivalStation().getId();
-            TrainStop startStop = order.getTrain().getTrainStops().stream().
-                    filter(stop -> stop.getId().longValue() == startId).findFirst()
+            int startId = Math.toIntExact(order.getDepartureStation().getId());
+            int endId = Math.toIntExact(order.getArrivalStation().getId());
+            Long trainId = order.getTrain().getId();
+            Train train = trainRepository.findById(trainId).orElse(null);
+            if(train == null)return;
+            TrainStop startStop = train.getTrainStops().stream().
+                    filter(stop -> stop.getStation().getId() == startId).findFirst()
                     .orElse(null);
 
-            TrainStop endStop = order.getTrain().getTrainStops().stream().
-                    filter(stop -> stop.getId().longValue() == endId).findFirst()
+            TrainStop endStop = train.getTrainStops().stream().
+                    filter(stop -> stop.getStation().getId() == endId).findFirst()
                     .orElse(null);
-            if(startStop == null || endStop == null) return;
+            LocalTime startLocalTime = LocalTime.now();
+            LocalTime endLocalTime = LocalTime.now();
+            if(startStop != null){
+                startLocalTime = startStop.getArrivalTime();
+            }
+            if(endStop != null){
+                endLocalTime = endStop.getArrivalTime();
+            }
+            if(startStop == null || endStop == null){
+                if(order.getTrain().getStartStation().getId() == startId){
+                    startLocalTime = train.getDepartureTime();
+                }else if(order.getTrain().getEndStation().getId() == endId){
+                    endLocalTime = train.getArrivalTime();
+                }else{
+                    return ;
+                }
+            }
 
             LocalDate day = order.getTrain().getDate();
-            LocalDateTime startTime = LocalDateTime.of(day, startStop.getArrivalTime());
-            LocalDateTime endTime = LocalDateTime.of(day, endStop.getArrivalTime());
+            LocalDateTime startTime = LocalDateTime.of(day, startLocalTime);
+            LocalDateTime endTime = LocalDateTime.of(day, endLocalTime);
             //如果任务超过1小时，则标记该任务已经过期
             if(LocalDateTime.now().isAfter(startTime.minusHours(1))){
                 order.setStatus(3);
                 order.setExpireTime(LocalDateTime.now());
                 waitingOrderRepository.save(order);
-                break;
+                continue;
             }
             //获取所有的可用座位
-            List<Seat> seats = order.getTrain().getModel().getCarriages().stream().
-                    filter(carriage -> Objects.equals(carriage.getCarriageType(), order.getSeatType())).
-                    flatMap(carriage -> carriage.getSeats().stream()).toList();
+            //
+            List<Seat> seats = trainCarriageRepository.findAllByModelIdAndCarriageType(
+                            order.getTrain().getModel().getId(),
+                            order.getSeatType()
+                    ).stream()
+                    .flatMap(carriage -> carriage.getSeats().stream()) // 关键修正：确保调用stream()
+                    .toList(); // 或直接用.toList()
 
             for (Seat seat : seats) {
                 List<LocalDateTime[]> lockPlanSeats = seatLockRepository.findAllBySeatIdAndFinish(seat.getId(), 0).stream().

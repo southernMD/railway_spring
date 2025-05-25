@@ -35,7 +35,4 @@ public class ChangeRecord extends Base{
 
     @Column(nullable = false)
     private Integer status;
-
-    @Column(length = 200)
-    private String reason;
 }

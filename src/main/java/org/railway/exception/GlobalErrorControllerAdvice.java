@@ -53,11 +53,11 @@ public class GlobalErrorControllerAdvice {
         BaseResponse<Void> response = BaseResponse.error(HttpStatus.BAD_REQUEST.value(), "参数验证失败：" + ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
-    //403
+    //401
     @ExceptionHandler({AccessDeniedException.class, AuthException.class})
     public ResponseEntity<BaseResponse<Void>> handleAccessDeniedAndAuthException(Exception ex) {
-        BaseResponse<Void> response = BaseResponse.error(HttpStatus.FORBIDDEN.value(), ex.getMessage());
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        BaseResponse<Void> response = BaseResponse.error(HttpStatus.UNAUTHORIZED.value(), ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
 
     @ExceptionHandler(Exception.class)

@@ -19,4 +19,5 @@ public interface TrainCarriageRepository extends JpaRepository<TrainCarriage, Lo
      * @return 车厢列表
      */
     List<TrainCarriage> findByModelId(Integer modelId);
+    List<TrainCarriage> findAllByModelIdAndCarriageType(Integer modelId, Integer carriageType);
 }

@@ -7,9 +7,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.railway.annotation.CheckUserId;
 import org.railway.dto.request.PassengerRequest;
+import org.railway.dto.request.SetDefaultPassengerRequest;
 import org.railway.dto.response.BaseResponse;
 import org.railway.dto.response.PassengerResponse;
 import org.railway.service.PassengerService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -85,6 +87,7 @@ public class PassengerController {
             }
     )
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public BaseResponse<List<PassengerResponse>> getAllPassengers() {
         List<PassengerResponse> responseDTOs = passengerService.getAllPassengers();
         return BaseResponse.success(responseDTOs);
@@ -140,7 +143,7 @@ public class PassengerController {
 
     /**
      * 根据用户ID查找所有乘客信息
-     * @param userId 用户ID
+     * @param id 用户ID
      * @return 返回该用户的所有乘客响应DTO列表
      */
     @Operation(
@@ -152,11 +155,27 @@ public class PassengerController {
             }
     )
     @CheckUserId
-    @GetMapping("/user")
+    @GetMapping("/user/{id}")
     public BaseResponse<List<PassengerResponse>> getPassengersByUserId(
             @Parameter(description = "用户ID", required = true)
-            @RequestParam Long userId) {
-        List<PassengerResponse> responseDTOs = passengerService.getPassengersByUserId(userId);
+            @PathVariable Long id) {
+        List<PassengerResponse> responseDTOs = passengerService.getPassengersByUserId(id);
         return BaseResponse.success(responseDTOs);
+    }
+    /**
+     * 将指定id乘客设置为默认乘客
+     */
+    @Operation(
+            summary = "将指定id乘客设置为默认乘客",
+            description = "将指定id乘客设置为默认乘客",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "乘客设置为默认乘客成功"),
+                    @ApiResponse(responseCode = "404", description = "乘客不存在")
+            }
+    )
+    @PutMapping("/default")
+    public BaseResponse<Object> setDefaultPassenger(@Valid @RequestBody SetDefaultPassengerRequest setDefaultPassengerRequest) {
+        passengerService.setDefaultPassenger(setDefaultPassengerRequest);
+        return BaseResponse.success(null, "设置成功");
     }
 }

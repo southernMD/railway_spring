@@ -126,18 +126,18 @@ public class TrainStopService {
             originTrainStop.add(trainStop);
         }
         // dto.getTrainStops() 与 originTrainStop合并，忽略掉所有trainId不为dto.getTrainId()的trainStop
-        Map<Long, TrainStopRequest> requestMap = dto.getTrainStops().stream()
-                .collect(Collectors.toMap(TrainStopRequest::getId, Function.identity()));
+//        Map<Long, TrainStopRequest> requestMap = dto.getTrainStops().stream()
+//                .collect(Collectors.toMap(TrainStopRequest::getId, Function.identity()));
 
         // 合并传入的修改到原 trainStops
         List<TrainStop> updatedTrainStops = originTrainStop.stream()
                 .peek(trainStop -> {
                     // 如果传入的 trainStops 中包含该 trainStop，则更新字段
-                    if (requestMap.containsKey(trainStop.getId())) {
-                        TrainStopRequest request = requestMap.get(trainStop.getId());
+//                    if (requestMap.containsKey(trainStop.getId())) {
+//                        TrainStopRequest request = requestMap.get(trainStop.getId());
 
-                        if(Objects.equals(train.getStartStation().getId(), request.getStationId()) ||
-                                Objects.equals(train.getEndStation().getId(), request.getStationId())){
+                        if(Objects.equals(train.getStartStation().getId(), trainStop.getStation().getId()) ||
+                                Objects.equals(train.getEndStation().getId(), trainStop.getStation().getId())){
                             throw new IllegalArgumentException("不能添加该车次的起始站或终点站为中间停靠站");
                         }
 
@@ -145,7 +145,7 @@ public class TrainStopService {
 //                        Station station = stationRepository.findByIdAndStatus(Math.toIntExact(request.getStationId()),1)
 //                                .orElseThrow(() -> new EntityNotFoundException("站点未找到或不可用"));
 //                        trainStop.setStation(station);
-                    }
+//                    }
                 })
                 .sorted(Comparator.comparingInt(TrainStop::getSequence))  // 按 sequence 升序排序
                 .toList();

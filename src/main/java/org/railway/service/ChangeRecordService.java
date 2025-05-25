@@ -75,6 +75,8 @@ public class ChangeRecordService {
         // 保存改签记录
         changeRecord.setChangeFee(BigDecimal.valueOf(Math.abs(val.doubleValue()) * 0.1));
         changeRecord = changeRecordRepository.save(changeRecord);
+        ticketRepository.save(originalTicket);
+        ticketRepository.save(newTicket);
         return convertToResponseDTO(changeRecord);
     }
 

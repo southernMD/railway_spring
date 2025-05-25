@@ -1,10 +1,12 @@
 package org.railway.controller;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.railway.annotation.CheckUserId;
+import org.railway.dto.Views;
 import org.railway.dto.request.WaitingOrderRequest;
 import org.railway.dto.response.BaseResponse;
 import org.railway.entity.WaitingOrder;
@@ -79,6 +81,23 @@ public class WaitingOrderController {
     @CheckUserId
     public BaseResponse<List<WaitingOrder>> getByUser(@RequestParam Long userId) {
         return BaseResponse.success(waitingOrderService.getUserWaitingOrders(userId));
+    }
+    /**
+     * 获取所有的候补订单
+     * @return 返回所有的候补订单列表
+     * */
+    @Operation(
+            summary = "获取所有的候补订单",
+            description = "获取所有的候补订单",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "候补订单列表获取成功")
+            }
+
+    )
+    @GetMapping
+    @JsonView(Views.Basic.class)
+    public BaseResponse<List<WaitingOrder>> getAll() {
+        return BaseResponse.success(waitingOrderService.getAllWaitingOrders());
     }
 
     /**

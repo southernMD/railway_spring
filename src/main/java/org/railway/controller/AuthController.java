@@ -140,7 +140,14 @@ public class AuthController {
             String accessToken = JwtUtil.generateAccessToken(auth.getName(),user.getId());
             String refreshToken = JwtUtil.generateRefreshToken(auth.getName(),user.getId());
 
-            return BaseResponse.success(new TokenResponse(accessToken, refreshToken,false,user.getId(),user.getUsername()), "注册成功");
+            return BaseResponse.success(new TokenResponse(
+                    accessToken,
+                    refreshToken,
+                    false,
+                    user.getId(),
+                    user.getUsername(),
+                    user.getEmail()
+            ), "注册成功");
         });
     }
 
@@ -170,7 +177,13 @@ public class AuthController {
         String accessToken = JwtUtil.generateAccessToken(auth.getName(),user.getId());
         String refreshToken = JwtUtil.generateRefreshToken(auth.getName(),user.getId());
 
-        return BaseResponse.success(new TokenResponse(accessToken, refreshToken,user.getUserType() == 1,user.getId(),user.getUsername()));
+        return BaseResponse.success(new TokenResponse(accessToken,
+                refreshToken,
+                user.getUserType() == 1,
+                user.getId(),
+                user.getUsername(),
+                user.getEmail()
+        ));
     }
 
     /**
@@ -198,7 +211,14 @@ public class AuthController {
         User user = userService.findByEmail(request.getEmail());
         String accessToken = JwtUtil.generateAccessToken(auth.getName(),user.getId());
         String refreshToken = JwtUtil.generateRefreshToken(auth.getName(),user.getId());
-        return BaseResponse.success(new TokenResponse(accessToken, refreshToken,user.getUserType() == 1,user.getId(),user.getUsername()));
+        return BaseResponse.success(new TokenResponse(
+                accessToken,
+                refreshToken,
+                user.getUserType() == 1,
+                user.getId(),
+                user.getUsername(),
+                user.getEmail()
+        ));
     }
 
     /**

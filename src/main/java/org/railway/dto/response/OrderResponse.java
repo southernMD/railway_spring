@@ -17,4 +17,6 @@ public class OrderResponse {
     private Integer status;
     private LocalDateTime paymentTime;
     private List<Ticket> tickets;
+    private LocalDateTime createTime;
+    private LocalDateTime updateTime;
 }

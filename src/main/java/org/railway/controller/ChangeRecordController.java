@@ -1,9 +1,11 @@
 package org.railway.controller;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.railway.annotation.CheckUserId;
+import org.railway.dto.Views;
 import org.railway.dto.request.ChangeRecordRequest;
 import org.railway.dto.response.BaseResponse;
 import org.railway.dto.response.ChangeRecordResponse;
@@ -84,6 +86,7 @@ public class ChangeRecordController {
     )
     @CheckUserId
     @GetMapping
+    @JsonView(Views.Basic.class)
     public BaseResponse<List<ChangeRecordResponse>> getAllChangeRecords() {
         List<ChangeRecordResponse> responseDTOs = changeRecordService.getAllChangeRecords();
         return BaseResponse.success(responseDTOs);

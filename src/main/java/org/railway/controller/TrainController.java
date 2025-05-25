@@ -11,10 +11,13 @@ import org.railway.dto.request.TrainRequest;
 import org.railway.dto.response.BaseResponse;
 import org.railway.dto.response.TrainResponse;
 import org.railway.service.TrainService;
+import org.railway.dto.request.TrainUpdateRequest;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -110,7 +113,7 @@ public class TrainController {
     )
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public BaseResponse<TrainResponse> update(@PathVariable Long id, @Valid @RequestBody TrainRequest request) throws SQLException {
+    public BaseResponse<TrainResponse> update(@PathVariable Long id, @Valid @RequestBody TrainUpdateRequest request) throws SQLException {
         TrainResponse train = trainService.update(id, request);
         return BaseResponse.success(train);
     }
@@ -135,4 +138,31 @@ public class TrainController {
         trainService.deleteById(id);
         return BaseResponse.success(null, "删除成功");
     }
+
+    /**
+     * 根据车站和日期查询符合条件的列车
+     * @param startStationId 起始站ID
+     * @param endStationId 终点站ID
+     * @param date 查询日期
+     * @return 符合条件的列车列表
+     */
+    @Operation(
+            summary = "查询两站间的列车",
+            description = "根据起始站、终点站和日期查询符合条件的列车",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "查询成功"),
+                    @ApiResponse(responseCode = "400", description = "参数无效")
+            }
+    )
+    @GetMapping("/route")
+    @JsonView(Views.Basic.class)
+    public BaseResponse<List<TrainResponse>> getTrainsByRoute(
+            @RequestParam Long startStationId,
+            @RequestParam Long endStationId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+
+        List<TrainResponse> trains = trainService.getTrainsByRoute(startStationId, endStationId, date);
+        return BaseResponse.success(trains);
+    }
+
 }

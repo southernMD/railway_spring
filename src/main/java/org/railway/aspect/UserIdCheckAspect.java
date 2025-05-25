@@ -40,11 +40,6 @@ public class UserIdCheckAspect {
         for (Object arg : args) {
             if (arg == null) continue;
             // 直接是Long类型
-            if (arg instanceof Long) {
-                userId = (Long) arg;
-                break;
-            }
-            // 反射查找userId字段
             try {
                 java.lang.reflect.Field field = arg.getClass().getDeclaredField("userId");
                 field.setAccessible(true);

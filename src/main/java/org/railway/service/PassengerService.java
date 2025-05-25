@@ -2,6 +2,7 @@ package org.railway.service;
 
 import lombok.RequiredArgsConstructor;
 import org.railway.dto.request.PassengerRequest;
+import org.railway.dto.request.SetDefaultPassengerRequest;
 import org.railway.dto.response.PassengerResponse;
 import org.railway.entity.Passenger;
 import org.railway.entity.User;
@@ -9,8 +10,10 @@ import org.railway.service.impl.PassengerRepository;
 import org.railway.service.impl.UserRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -115,5 +118,20 @@ public class PassengerService {
         BeanUtils.copyProperties(passenger, responseDTO);
         responseDTO.setUserId(passenger.getUser().getId());
         return responseDTO;
+    }
+    /**
+     * 设置默认的乘客
+     * @param setDefaultPassengerRequest 设置默认的乘客请求DTO
+     */
+    @Transactional
+    public void setDefaultPassenger(SetDefaultPassengerRequest setDefaultPassengerRequest) {
+        List<Passenger> passengers = passengerRepository.findByUserId(setDefaultPassengerRequest.getUserId());
+        passengers = passengers.stream()
+                .peek(passenger -> {
+                    if(!Objects.equals(passenger.getId(), setDefaultPassengerRequest.getId()))passenger.setIsDefault(0);
+                    else passenger.setIsDefault(1);
+                })
+                .toList();
+        passengerRepository.saveAll(passengers);
     }
 }

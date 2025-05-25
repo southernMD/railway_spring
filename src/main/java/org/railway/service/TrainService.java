@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.railway.dto.request.TrainRequest;
+import org.railway.dto.request.TrainUpdateRequest;
 import org.railway.dto.response.TrainResponse;
 import org.railway.entity.*;
 import org.railway.service.impl.*;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -124,7 +126,7 @@ public class TrainService {
      * @return 更新后的列车信息
      * @throws EntityNotFoundException 如果未找到对应记录
      */
-    public TrainResponse update(Long id, @Valid TrainRequest dto) throws SQLException {
+    public TrainResponse update(Long id, @Valid TrainUpdateRequest dto) throws SQLException {
         if(dto.getDepartureTime().isAfter(dto.getArrivalTime())){
             throw new SQLException("出发时间不能早于到达时间");
         }
@@ -138,7 +140,7 @@ public class TrainService {
 
         for (Train existing : existingList) {
             // 排除自己
-            if (existing.getTrainNumber().equals(dto.getTrainNumber())) continue;
+            if (existing.getId().equals(dto.getId())) continue;
 
             boolean hasOverlap = !dto.getArrivalTime().isBefore(existing.getDepartureTime()) &&
                     !dto.getDepartureTime().isAfter(existing.getArrivalTime());
@@ -202,6 +204,15 @@ public class TrainService {
         TrainResponse response = new TrainResponse();
         BeanUtils.copyProperties(entity, response); // Entity -> Dto
         return response;
+    }
+    /*
+    * 更具选择区间查询列车
+    * */
+    public List<TrainResponse> getTrainsByRoute(Long startStationId, Long endStationId, LocalDate date) {
+        List<Train> trains = repository.findTrainsByRoute(startStationId, endStationId, date);
+        return trains.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
     }
 
 }
