@@ -9,7 +9,7 @@ import java.time.LocalDate;
 @Data
 public class TicketRequest {
 
-    @NotNull(message = "订单ID不能为空")
+//    @NotNull(message = "订单ID不能为空")
     private Long orderId;
 
     @NotNull(message = "乘客ID不能为空")
@@ -44,6 +44,7 @@ public class TicketRequest {
     @Min(value = 0, message = "状态值必须大于等于0")
     @Max(value = 5, message = "状态值必须小于等于5")
     private Integer status;
+
 //
 //    private BigDecimal refundAmount;
 //

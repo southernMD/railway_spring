@@ -27,11 +27,6 @@ public class Order extends Base{
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount;
 
-    @Column(nullable = false)
-    private Integer status;
-
-    private LocalDateTime paymentTime;
-
     @OneToMany(mappedBy = "orderId", cascade = CascadeType.ALL)
     private List<Ticket> tickets;
 }

@@ -14,8 +14,6 @@ public class OrderResponse {
     private String orderNo;
     private User user;
     private BigDecimal totalAmount;
-    private Integer status;
-    private LocalDateTime paymentTime;
     private List<Ticket> tickets;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;

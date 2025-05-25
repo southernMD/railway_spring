@@ -2,9 +2,11 @@ package org.railway.dto.request;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import org.railway.entity.Ticket;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class OrderRequest {
@@ -20,11 +22,6 @@ public class OrderRequest {
     @DecimalMin(value = "0.0", inclusive = false, message = "总金额必须大于0")
     private BigDecimal totalAmount;
 
-    @NotNull(message = "状态不能为空")
-    @Min(value = 0, message = "状态值必须大于等于0")
-    @Max(value = 2, message = "状态值必须小于等于2")
-    private Integer status;
+    private List<TicketRequest> tickets;
 
-    @FutureOrPresent(message = "支付时间必须是当前或将来时间")
-    private LocalDateTime paymentTime;
 }

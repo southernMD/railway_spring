@@ -198,8 +198,7 @@ public class WaitingOrderService {
         // 3. 这里可以添加其他业务逻辑，如发送通知等
         //创建车票
         Ticket ticket = new Ticket();
-        ticket.setTicketNo(UUID.randomUUID().toString());
-
+        ticket.setTicketNo(UUID.randomUUID().toString().replace("-", ""));  // 生成32位字符串
 
     }
 }

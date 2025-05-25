@@ -13,6 +13,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,6 +28,7 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
+    private final TicketService ticketService;
 
     /**
      * 查询所有订单信息
@@ -58,6 +60,7 @@ public class OrderService {
      * @param orderRequest 包含订单信息的请求数据
      * @return 创建后的响应数据
      */
+    @Transactional
     public OrderResponse createOrder(@Valid OrderRequest orderRequest) {
         User user = userRepository.findById(orderRequest.getUserId())
                 .orElseThrow(() -> new EntityNotFoundException("用户未找到"));
@@ -65,6 +68,16 @@ public class OrderService {
         BeanUtils.copyProperties(orderRequest, order);
         order.setUser(user);
         Order savedOrder = orderRepository.save(order);
+        if(orderRequest.getTickets() != null){
+            orderRequest.getTickets().forEach(ticket -> {
+                try {
+                    ticket.setOrderId(savedOrder.getId());
+                    ticketService.createTicket(ticket);
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        }
         return convertToResponse(savedOrder);
     }
 

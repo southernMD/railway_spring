@@ -86,7 +86,8 @@ public class TicketService {
         Train train = trainRepository.findById(ticketRequest.getTrainId())
                 .orElseThrow(() -> new EntityNotFoundException("列车未找到"));
         ticket.setTrain(train);
-        ticket.setTicketNo(UUID.randomUUID().toString());
+        // 替换原有代码
+        ticket.setTicketNo(UUID.randomUUID().toString().replace("-", ""));  // 生成32位字符串
         return checkRequestReasonable(ticketRequest, ticket,true);
     }
 
@@ -139,6 +140,14 @@ public class TicketService {
                 isArrivalStationValid = true;
             }
         }
+        if(Objects.equals(existingTicket.getTrain().getStartStation().getId(), ticketRequest.getDepartureStationId())){
+            isDepartureStationValid = true;
+            existingTicket.setDepartureStation(existingTicket.getTrain().getStartStation());
+        }
+        if(Objects.equals(existingTicket.getTrain().getEndStation().getId(), ticketRequest.getArrivalStationId())){
+            isArrivalStationValid = true;
+            existingTicket.setArrivalStation(existingTicket.getTrain().getEndStation());
+        }
 
         if (!isDepartureStationValid || !isArrivalStationValid) {
             throw new IllegalArgumentException("出发站或到达站不在列车的停靠站列表中");
@@ -155,11 +164,28 @@ public class TicketService {
                     .orElseThrow(() -> new EntityNotFoundException("座位未找到"));
             existingTicket.setSeat(seat);
             //判断改时间段座位是否可用
-            TrainStop startStation = trainStopRepository.findByTrainIdAndStationId(existingTicket.getTrain().getId(), Long.valueOf(existingTicket.getDepartureStation().getId()));
-            TrainStop endStation = trainStopRepository.findByTrainIdAndStationId(existingTicket.getTrain().getId(), Long.valueOf(existingTicket.getArrivalStation().getId()));
+            LocalTime startTime = null;
+            LocalTime endTime = null;
+            TrainStop startStation = trainStopRepository.findByTrainIdAndStationId(existingTicket.getTrain().getId(), existingTicket.getDepartureStation().getId());
+            TrainStop endStation = trainStopRepository.findByTrainIdAndStationId(existingTicket.getTrain().getId(), existingTicket.getArrivalStation().getId());
             LocalDate day = existingTicket.getTrain().getDate();
-            LocalTime startTime = startStation.getArrivalTime();
-            LocalTime endTime = endStation.getArrivalTime();
+            if(startStation == null){
+                if(Objects.equals(existingTicket.getTrain().getStartStation().getId(), ticketRequest.getDepartureStationId())){
+                    startTime = existingTicket.getTrain().getDepartureTime();
+                }
+            }
+            if(endStation == null){
+                if(Objects.equals(existingTicket.getTrain().getEndStation().getId(), ticketRequest.getArrivalStationId())){
+                    endTime = existingTicket.getTrain().getArrivalTime();
+                }
+            }
+            if(startStation != null && endStation != null){
+                startTime = startStation.getArrivalTime();
+                endTime = endStation.getArrivalTime();
+            }
+            if(startTime == null || endTime == null){
+                throw new IllegalArgumentException("该列车没有停靠该站点");
+            }
             LocalDateTime startDateTime = LocalDateTime.of(day, startTime);
             LocalDateTime endDateTime = LocalDateTime.of(day, endTime);
             List<SeatLock> existingLock = seatLockRepository.findAllBySeatIdAndFinish(existingTicket.getSeat().getId(), 0);
