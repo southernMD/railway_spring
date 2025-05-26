@@ -65,4 +65,6 @@ public class Ticket extends Base{
 
     private LocalDateTime refundTime;
 
+    @Column(name = "seat_lock_id")
+    private Long seatLockId;
 }

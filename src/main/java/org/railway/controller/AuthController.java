@@ -174,6 +174,9 @@ public class AuthController {
         );
         SecurityContextHolder.getContext().setAuthentication(auth);
         User user = userService.findByUsername(request.getUsername());
+        if(user.getStatus() == 0) {
+            return BaseResponse.error(401, "用户已被封禁");
+        }
         String accessToken = JwtUtil.generateAccessToken(auth.getName(),user.getId());
         String refreshToken = JwtUtil.generateRefreshToken(auth.getName(),user.getId());
 
@@ -209,6 +212,9 @@ public class AuthController {
         );
         SecurityContextHolder.getContext().setAuthentication(auth);
         User user = userService.findByEmail(request.getEmail());
+        if(user.getStatus() == 0) {
+            return BaseResponse.error(401, "用户已被封禁");
+        }
         String accessToken = JwtUtil.generateAccessToken(auth.getName(),user.getId());
         String refreshToken = JwtUtil.generateRefreshToken(auth.getName(),user.getId());
         return BaseResponse.success(new TokenResponse(

@@ -13,6 +13,7 @@ import org.railway.service.ChangeRecordService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.SQLException;
 import java.util.List;
 
 
@@ -47,7 +48,7 @@ public class ChangeRecordController {
     )
     @CheckUserId
     @PostMapping
-    public BaseResponse<ChangeRecordResponse> createChangeRecord(@RequestBody ChangeRecordRequest request) {
+    public BaseResponse<ChangeRecordResponse> createChangeRecord(@RequestBody ChangeRecordRequest request) throws SQLException {
         ChangeRecordResponse responseDTO = changeRecordService.createChangeRecord(request);
         return BaseResponse.success(responseDTO);
     }
@@ -149,8 +150,8 @@ public class ChangeRecordController {
     )
     @CheckUserId
     @PutMapping("/status/{id}")
-    public BaseResponse<ChangeRecordResponse> updateChangeRecordStatus(@PathVariable Long id, @RequestParam Integer status) {
-        ChangeRecordResponse responseDTO = changeRecordService.updateChangeRecordStatus(id, status);
+    public BaseResponse<ChangeRecordResponse> updateChangeRecordStatus(@PathVariable Long id, @RequestParam Integer status,@RequestParam Long userId) {
+        ChangeRecordResponse responseDTO = changeRecordService.updateChangeRecordStatus(id, status,userId);
         return BaseResponse.success(responseDTO);
     }
 

@@ -10,7 +10,10 @@ import org.hibernate.annotations.View;
 import org.railway.annotation.CheckUserId;
 import org.railway.dto.Views;
 import org.railway.dto.request.TicketRequest;
+import org.railway.dto.request.TicketUpdateRequest;
+import org.railway.dto.request.TicketUpdateStatusRequest;
 import org.railway.dto.response.BaseResponse;
+import org.railway.dto.response.TicketDetailResponse;
 import org.railway.dto.response.TicketResponse;
 import org.railway.service.TicketService;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -67,6 +70,23 @@ public class TicketController {
         TicketResponse ticket = ticketService.getTicketById(id);
         return BaseResponse.success(ticket);
     }
+    /**
+     * 根据 ID 获取详细车票信息
+     * @param id 车票唯一标识
+     * @return 返回对应的车票响应
+     */
+    @Operation(
+            summary = "根据ID获取详细车票信息",
+            description = "根据车票ID获取车票的详细信息",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "车票获取成功"),
+                    @ApiResponse(responseCode = "404", description = "车票不存在")
+            }
+    )
+    @GetMapping("/detail/{id}")
+    public BaseResponse<TicketDetailResponse> getTicketDetailById(@PathVariable Long id) {
+        return BaseResponse.success(ticketService.createTicketDetail(id));
+    }
 
     /**
      * 创建一个新车票
@@ -112,7 +132,7 @@ public class TicketController {
     @CheckUserId
     public BaseResponse<TicketResponse> updateTicket(
             @PathVariable Long id,
-            @Valid @RequestBody TicketRequest ticketRequest) throws SQLException {
+            @Valid @RequestBody TicketUpdateRequest ticketRequest) throws SQLException {
         TicketResponse ticket = ticketService.updateTicket(id, ticketRequest);
         return BaseResponse.success(ticket);
     }
@@ -135,5 +155,24 @@ public class TicketController {
     public BaseResponse<Object> deleteTicket(@PathVariable Long id) {
         ticketService.deleteTicket(id);
         return BaseResponse.success(null, "删除成功");
+    }
+
+    /*
+    * 更新指定车票状态
+    *
+    * */
+    @Operation(
+            summary = "更新车票状态",
+            description = "根据车票ID和状态值更新车票的状态",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "车票状态更新成功"),
+                    @ApiResponse(responseCode = "404", description = "车票不存在")
+            }
+    )
+    @PutMapping("/status")
+    @CheckUserId
+    public BaseResponse<TicketResponse> updateTicketStatus(
+            @Valid @RequestBody TicketUpdateStatusRequest ticketUpdateStatusRequest) throws SQLException {
+        return BaseResponse.success(ticketService.updateTicketStatus(ticketUpdateStatusRequest),  "更新成功");
     }
 }

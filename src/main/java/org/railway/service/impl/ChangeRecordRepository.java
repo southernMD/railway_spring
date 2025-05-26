@@ -18,4 +18,5 @@ public interface ChangeRecordRepository extends JpaRepository<ChangeRecord, Long
      * @return 返回该原票的所有改签记录列表
      */
     List<ChangeRecord> findByNewTicketId(Long ticketId);
+
 }

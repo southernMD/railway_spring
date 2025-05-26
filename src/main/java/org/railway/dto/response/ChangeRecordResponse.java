@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 @Data
 public class ChangeRecordResponse {
     private Long id;
-    private Ticket ticket;
+    private Ticket originalTicket;
     private Ticket newTicket;
     private Long orderId;
     private BigDecimal changeFee;
